@@ -4,20 +4,11 @@
 // Get a free hosted Postgres database in seconds: `npx create-db`
 
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
-}
-
-datasource db {
-  provider = "postgresql"
-}
-agenerator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "mysql"
-  url      = env("DATABASE_URL")
 }
 
 enum Role {
@@ -38,7 +29,7 @@ enum StatusKetersediaan {
   PEMELIHARAAN
 }
 
-model User {
+model user {
   id           Int         @id @default(autoincrement())
   nim          String      @unique @db.VarChar(20)
   namaLengkap  String      @db.VarChar(100)
@@ -47,30 +38,30 @@ model User {
   createdAt    DateTime    @default(now())
   
   // Relasi One-to-Many: 1 User bisa punya banyak transaksi peminjaman
-  borrowings   Borrowing[]
+  borrowings   borrowing[]
 }
 
-model Category {
+model category {
   id           Int         @id @default(autoincrement())
   namaKategori String      @db.VarChar(50)
   deskripsi    String?     @db.Text // Tanda tanya (?) berarti Nullable
   createdAt    DateTime    @default(now())
   
   // Relasi
-  assets       Asset[]
+  assets       asset[]
 }
 
-model Location {
+model location {
   id           Int         @id @default(autoincrement())
   namaLokasi   String      @db.VarChar(50)
   deskripsi    String?     @db.Text
   createdAt    DateTime    @default(now())
   
   // Relasi
-  assets       Asset[]
+  assets       asset[]
 }
 
-model Asset {
+model asset {
   id                 Int                @id @default(autoincrement())
   kodeAset           String             @unique @db.VarChar(50)
   namaAset           String             @db.VarChar(150)
@@ -81,12 +72,12 @@ model Asset {
   createdAt          DateTime           @default(now())
 
   // Definisi Foreign Key
-  category           Category           @relation(fields: [categoryId], references: [id])
-  location           Location           @relation(fields: [locationId], references: [id])
-  borrowings         Borrowing[]
+  category           category           @relation(fields: [categoryId], references: [id])
+  location           location           @relation(fields: [locationId], references: [id])
+  borrowings         borrowing[]
 }
 
-model Borrowing {
+model borrowing {
   id               Int         @id @default(autoincrement())
   userId           Int
   assetId          Int
@@ -99,6 +90,6 @@ model Borrowing {
   createdAt        DateTime    @default(now())
 
   // Definisi Foreign Key
-  user             User        @relation(fields: [userId], references: [id])
-  asset            Asset       @relation(fields: [assetId], references: [id])
+  user             user        @relation(fields: [userId], references: [id])
+  asset            asset       @relation(fields: [assetId], references: [id])
 }
