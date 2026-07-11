@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import authRoutes from "./routes/auth/authRoutes.js";
+import assetRoutes from './routes/auth/assetRoute.js'
 
 dotenv.config();
 
@@ -12,6 +13,7 @@ app.use(cors());
 app.use(express.json());
 
 app.use('/api/auth', authRoutes);
+app.use('/api/assets', assetRoutes);
 
 app.get('/', (req, res) => {
     res.json({message: 'Hello World!'});
