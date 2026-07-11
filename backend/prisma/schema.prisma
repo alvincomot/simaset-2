@@ -4,7 +4,8 @@
 // Get a free hosted Postgres database in seconds: `npx create-db`
 
 generator client {
-  provider = "prisma-client-js"
+  provider   = "prisma-client-js"
+  engineType = "library"
 }
 
 datasource db {
@@ -13,8 +14,8 @@ datasource db {
 
 enum Role {
   SUPER_ADMIN
-  MANAGER
-  STUDENT
+  STAFF
+  USER
 }
 
 enum KondisiAset {
@@ -34,7 +35,7 @@ model user {
   nim          String      @unique @db.VarChar(20)
   namaLengkap  String      @db.VarChar(100)
   password     String      @db.VarChar(255)
-  role         Role        @default(STUDENT)
+  role         Role        @default(USER)
   createdAt    DateTime    @default(now())
   
   // Relasi One-to-Many: 1 User bisa punya banyak transaksi peminjaman
