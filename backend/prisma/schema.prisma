@@ -20,8 +20,7 @@ enum Role {
 
 enum KondisiAset {
   BAIK
-  RUSAK_RINGAN
-  RUSAK_BERAT
+  RUSAK
 }
 
 enum StatusKetersediaan {
