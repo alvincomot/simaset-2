@@ -93,8 +93,8 @@ export const forgotPassword = async (req, res) => {
     }
 
     //generate reset token & token expiry
-    resetToken = crypto.randomBytes(32).toString('hex');
-    tokenExpiry = new Date(Date.now() + 10 * 60 * 1000);
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const tokenExpiry = new Date(Date.now() + 10 * 60 * 1000);
 
     //update database 
     await prisma.user.update({
@@ -123,9 +123,12 @@ export const forgotPassword = async (req, res) => {
         subject: 'Permintaan Reset Password - SIMASET',
         html: `
         Halo, ${user.namaLengkap}
+
         Kami menerima permintaan reset password untuk akun Anda.
         Klik tombol di bawah ini untuk membuat password baru. Link ini hanya berlaku selama 15 menit.
+
         <a href="${resetLink}">Reset Password</a>
+
         Jika Anda tidak merasa meminta reset password, abaikan email ini.
         `
       };
