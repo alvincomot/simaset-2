@@ -36,6 +36,8 @@ model user {
   password     String      @db.VarChar(255)
   role         Role        @default(USER)
   createdAt    DateTime    @default(now())
+  resetToken   String?     @db.VarChar(255)
+  resetTokenExpiry DateTime?
   
   // Relasi One-to-Many: 1 User bisa punya banyak transaksi peminjaman
   borrowings   borrowing[]
