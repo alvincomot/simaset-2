@@ -9,7 +9,7 @@ Membangun sistem informasi terpusat untuk melacak siklus hidup barang operasiona
 
 ## 2. Batasan Sistem (Scope & Out-of-Scope)
 **In-Scope (Yang akan dibuat):**
-- Pencatatan barang masuk (pengadaan) dan barang keluar (penghapusan/rusak).
+- Pencatatan barang masuk (pengadaan) dan masing masing fiturbarang keluar (penghapusan/rusak).
 - Sistem peminjaman dan pengembalian barang (*checkout/check-in*).
 - Manajemen data master (Lokasi, Kategori).
 - Autentikasi dan otorisasi pengguna berbasis *Role*.
