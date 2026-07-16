@@ -5,6 +5,7 @@ import authRoutes from "./routes/authRoutes.js";
 import assetRoutes from "./routes/assetRoute.js";
 import masterRoutes from "./routes/masterRoute.js";
 import borrowingRoutes from "./routes/borrowingRoute.js";
+import allocationRoutes from "./routes/allocationRoute.js";
 
 dotenv.config();
 
@@ -18,6 +19,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/assets", assetRoutes);
 app.use("/api/masters", masterRoutes);
 app.use("/api/borrowing", borrowingRoutes);
+app.use("/api/allocation", allocationRoutes);
 
 app.get("/", (req, res) => {
   res.json({ message: "Hello World!" });
