@@ -122,15 +122,34 @@ export const updateAsset = async (req, res) => {
 export const deleteAsset = async (req, res) => {
   try {
     const { id } = req.params;
+    const assetId = parseInt(id);
     
-    const existingAsset = await prisma.asset.findUnique({ where: { id: parseInt(id) } });
+    const existingAsset = await prisma.asset.findUnique({ where: { id: assetId } });
     if (!existingAsset) {
       return res.status(404).json({ status: 'error', message: 'Aset tidak ditemukan'});
     }
 
-    await prisma.asset.delete({
-      where: { id: parseInt(id) }
+    // Cek apakah ada peminjaman yang MASIH AKTIF (PENDING atau AKTIF)
+    const activeBorrowings = await prisma.borrowing.count({
+      where: {
+        assetId: assetId,
+        statusPeminjaman: { in: ['PENDING', 'AKTIF'] }
+      }
     });
+
+    if (activeBorrowings > 0) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Aset tidak dapat dihapus karena masih memiliki peminjaman aktif atau menunggu persetujuan'
+      });
+    }
+
+    // Hapus semua riwayat peminjaman yang sudah SELESAI terlebih dahulu,
+    // kemudian hapus aset dalam satu transaksi atomik
+    await prisma.$transaction([
+      prisma.borrowing.deleteMany({ where: { assetId: assetId } }),
+      prisma.asset.delete({ where: { id: assetId } }),
+    ]);
 
     res.status(200).json({
       status: "success",
@@ -138,12 +157,7 @@ export const deleteAsset = async (req, res) => {
     })
     
   } catch (error) {
-    if (error.code === 'P2003') {
-      return res.status(400).json({
-        status: 'error',
-        message: 'Aset tidak dapat dihapus karena masih memiliki riwayat peminjaman'
-      });
-    }
+    console.error('Error deleteAsset: ', error);
     res.status(500).json({
       status: 'error',
       message: 'Gagal menghapus data aset'
