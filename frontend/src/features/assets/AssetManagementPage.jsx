@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Plus, Search, Edit2, Trash2, RefreshCw } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, RefreshCw, PackagePlus, ArrowRightLeft, Wrench, CheckCircle2 } from 'lucide-react';
 import client from '../../lib/api/client';
+import { features } from '../../lib/constants';
 import Button from '../../components/ui/Button';
 import StatusBadge from '../../components/ui/StatusBadge';
 import ConditionBadge from '../../components/ui/ConditionBadge';
@@ -12,6 +13,10 @@ import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { useToast } from '../../components/feedback/ToastProvider';
 import CreateAssetDialog from './CreateAssetDialog';
 import EditAssetDialog from './EditAssetDialog';
+import AllocateAssetDialog from './AllocateAssetDialog';
+import RelocateAssetDialog from './RelocateAssetDialog';
+import StartMaintenanceDialog from './StartMaintenanceDialog';
+import FinishMaintenanceDialog from './FinishMaintenanceDialog';
 
 export const AssetManagementPage = () => {
   const toast = useToast();
@@ -37,6 +42,14 @@ export const AssetManagementPage = () => {
   const [deletingAsset, setDeletingAsset] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState('');
+
+  // Allocation & Maintenance state (gated by features)
+  const [selectedAssetIds, setSelectedAssetIds] = useState([]);
+  const [isAllocateOpen, setIsAllocateOpen] = useState(false);
+  const [isRelocateOpen, setIsRelocateOpen] = useState(false);
+  const [targetAssetsForModal, setTargetAssetsForModal] = useState([]);
+  const [maintenanceStartAsset, setMaintenanceStartAsset] = useState(null);
+  const [maintenanceFinishAsset, setMaintenanceFinishAsset] = useState(null);
 
   // Open create dialog if URL has action=create
   useEffect(() => {
@@ -107,6 +120,7 @@ export const AssetManagementPage = () => {
       await client.delete(`/assets/${deletingAsset.id}`);
       toast.success('Aset Dihapus', `"${deletingAsset.namaAset}" berhasil dihapus dari inventaris.`);
       setDeletingAsset(null);
+      setSelectedAssetIds([]);
       fetchData();
     } catch (err) {
       // If 400 Foreign Key constraint (e.g. borrowing history exists)
@@ -116,6 +130,37 @@ export const AssetManagementPage = () => {
     } finally {
       setIsDeleting(false);
     }
+  };
+
+  const handleSelectAll = (e) => {
+    if (e.target.checked) {
+      const eligibleIds = filteredAssets
+        .filter(
+          (a) =>
+            a.statusKetersediaan !== 'DIPINJAM' &&
+            a.statusKetersediaan !== 'PEMELIHARAAN'
+        )
+        .map((a) => a.id);
+      setSelectedAssetIds(eligibleIds);
+    } else {
+      setSelectedAssetIds([]);
+    }
+  };
+
+  const handleToggleSelect = (assetId) => {
+    setSelectedAssetIds((prev) =>
+      prev.includes(assetId) ? prev.filter((id) => id !== assetId) : [...prev, assetId]
+    );
+  };
+
+  const handleOpenAllocate = (assetsList) => {
+    setTargetAssetsForModal(assetsList);
+    setIsAllocateOpen(true);
+  };
+
+  const handleOpenRelocate = (assetsList) => {
+    setTargetAssetsForModal(assetsList);
+    setIsRelocateOpen(true);
   };
 
   if (error) {
@@ -212,7 +257,7 @@ export const AssetManagementPage = () => {
       </div>
 
       {/* Table Section */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden relative">
         {isLoading ? (
           <SkeletonTable rows={8} columns={6} />
         ) : filteredAssets.length === 0 ? (
@@ -228,6 +273,27 @@ export const AssetManagementPage = () => {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-50 dark:bg-slate-900/60 border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">
+                  {(features.assetAllocation || features.assetRelocation) && (
+                    <th className="py-3.5 px-4 w-12 text-center">
+                      <input
+                        type="checkbox"
+                        aria-label="Pilih semua aset eligible"
+                        onChange={handleSelectAll}
+                        checked={
+                          filteredAssets.length > 0 &&
+                          filteredAssets
+                            .filter(
+                              (a) =>
+                                a.statusKetersediaan !== 'DIPINJAM' &&
+                                a.statusKetersediaan !== 'PEMELIHARAAN'
+                            )
+                            .every((a) => selectedAssetIds.includes(a.id)) &&
+                          selectedAssetIds.length > 0
+                        }
+                        className="rounded border-slate-300 dark:border-slate-700 text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer"
+                      />
+                    </th>
+                  )}
                   <th className="py-3.5 px-6">Informasi Aset</th>
                   <th className="py-3.5 px-6">Kategori</th>
                   <th className="py-3.5 px-6">Lokasi</th>
@@ -237,56 +303,191 @@ export const AssetManagementPage = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-sm">
-                {filteredAssets.map((asset) => (
-                  <tr
-                    key={asset.id}
-                    className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors"
-                  >
-                    <td className="py-4 px-6 font-medium text-slate-900 dark:text-slate-100">
-                      <div>
-                        <p className="font-bold text-slate-900 dark:text-slate-100">{asset.namaAset}</p>
-                        <p className="font-mono text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                          {asset.kodeAset}
-                        </p>
-                      </div>
-                    </td>
-                    <td className="py-4 px-6 text-slate-600 dark:text-slate-300">
-                      {asset.category?.namaKategori || 'Umum'}
-                    </td>
-                    <td className="py-4 px-6 text-slate-600 dark:text-slate-300">
-                      {asset.location?.namaLokasi || 'Gudang'}
-                    </td>
-                    <td className="py-4 px-6">
-                      <StatusBadge status={asset.statusKetersediaan} />
-                    </td>
-                    <td className="py-4 px-6">
-                      <ConditionBadge condition={asset.kondisi} />
-                    </td>
-                    <td className="py-4 px-6 text-right space-x-2">
-                      <button
-                        type="button"
-                        onClick={() => setEditingAsset(asset)}
-                        className="p-1.5 rounded-lg text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 transition-colors"
-                        title="Edit aset"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setDeleteError('');
-                          setDeletingAsset(asset);
-                        }}
-                        className="p-1.5 rounded-lg text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/60 transition-colors"
-                        title="Hapus aset"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {filteredAssets.map((asset) => {
+                  const isEligibleSelect =
+                    asset.statusKetersediaan !== 'DIPINJAM' &&
+                    asset.statusKetersediaan !== 'PEMELIHARAAN';
+
+                  return (
+                    <tr
+                      key={asset.id}
+                      className={`hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors ${
+                        selectedAssetIds.includes(asset.id)
+                          ? 'bg-indigo-50/40 dark:bg-indigo-950/30'
+                          : ''
+                      }`}
+                    >
+                      {(features.assetAllocation || features.assetRelocation) && (
+                        <td className="py-4 px-4 text-center">
+                          <input
+                            type="checkbox"
+                            checked={selectedAssetIds.includes(asset.id)}
+                            onChange={() => handleToggleSelect(asset.id)}
+                            disabled={!isEligibleSelect}
+                            title={
+                              !isEligibleSelect
+                                ? 'Aset sedang dipinjam atau dalam pemeliharaan'
+                                : undefined
+                            }
+                            className="rounded border-slate-300 dark:border-slate-700 text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                          />
+                        </td>
+                      )}
+                      <td className="py-4 px-6 font-medium text-slate-900 dark:text-slate-100">
+                        <div>
+                          <p className="font-bold text-slate-900 dark:text-slate-100">{asset.namaAset}</p>
+                          <p className="font-mono text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                            {asset.kodeAset}
+                          </p>
+                        </div>
+                      </td>
+                      <td className="py-4 px-6 text-slate-600 dark:text-slate-300">
+                        {asset.category?.namaKategori || 'Umum'}
+                      </td>
+                      <td className="py-4 px-6 text-slate-600 dark:text-slate-300">
+                        <div>
+                          <p className="font-medium text-slate-800 dark:text-slate-200">
+                            {asset.location?.namaLokasi || 'Gudang'}
+                          </p>
+                          {asset.lokasiAlokasiId && (
+                            <p className="text-xs text-purple-600 dark:text-purple-400 mt-0.5 font-semibold">
+                              Alokasi: {asset.lokasiAlokasi?.namaLokasi || `#${asset.lokasiAlokasiId}`}
+                            </p>
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-4 px-6">
+                        <StatusBadge status={asset.statusKetersediaan} />
+                      </td>
+                      <td className="py-4 px-6">
+                        <ConditionBadge condition={asset.kondisi} />
+                      </td>
+                      <td className="py-4 px-6 text-right space-x-1.5">
+                        {/* Alokasi Action */}
+                        {features.assetAllocation && asset.statusKetersediaan === 'TERSEDIA' && (
+                          <button
+                            type="button"
+                            onClick={() => handleOpenAllocate([asset])}
+                            className="p-1.5 rounded-lg text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950/60 transition-colors"
+                            title="Alokasikan Aset"
+                          >
+                            <PackagePlus className="w-4 h-4" />
+                          </button>
+                        )}
+
+                        {/* Relokasi Action */}
+                        {features.assetRelocation && asset.statusKetersediaan === 'DIALOKASIKAN' && (
+                          <button
+                            type="button"
+                            onClick={() => handleOpenRelocate([asset])}
+                            className="p-1.5 rounded-lg text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 transition-colors"
+                            title="Relokasi Aset"
+                          >
+                            <ArrowRightLeft className="w-4 h-4" />
+                          </button>
+                        )}
+
+                        {/* Masuk Servis Action */}
+                        {features.allocationMaintenance && asset.statusKetersediaan === 'DIALOKASIKAN' && (
+                          <button
+                            type="button"
+                            onClick={() => setMaintenanceStartAsset(asset)}
+                            className="p-1.5 rounded-lg text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/60 transition-colors"
+                            title="Pindahkan ke Pemeliharaan"
+                          >
+                            <Wrench className="w-4 h-4" />
+                          </button>
+                        )}
+
+                        {/* Selesaikan Servis Action */}
+                        {features.allocationMaintenance &&
+                          asset.statusKetersediaan === 'PEMELIHARAAN' &&
+                          asset.lokasiAlokasiId && (
+                            <button
+                              type="button"
+                              onClick={() => setMaintenanceFinishAsset(asset)}
+                              className="p-1.5 rounded-lg text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/60 transition-colors"
+                              title="Selesaikan Servis & Kembalikan"
+                            >
+                              <CheckCircle2 className="w-4 h-4" />
+                            </button>
+                          )}
+
+                        <button
+                          type="button"
+                          onClick={() => setEditingAsset(asset)}
+                          className="p-1.5 rounded-lg text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 transition-colors"
+                          title="Edit aset"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setDeleteError('');
+                            setDeletingAsset(asset);
+                          }}
+                          className="p-1.5 rounded-lg text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/60 transition-colors"
+                          title="Hapus aset"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {/* Sticky Bulk Action Bar */}
+        {selectedAssetIds.length > 0 && (
+          <div className="sticky bottom-0 inset-x-0 bg-slate-900/95 dark:bg-slate-800/95 backdrop-blur-md text-white px-6 py-4 border-t border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-in slide-in-from-bottom duration-200 z-20">
+            <div className="flex items-center gap-3">
+              <span className="px-3 py-1 rounded-xl bg-indigo-600 text-white font-bold text-sm">
+                {selectedAssetIds.length} Terpilih
+              </span>
+              <span className="text-xs text-slate-300">
+                Pilih aksi alokasi atau relokasi untuk aset dalam batch.
+              </span>
+            </div>
+            <div className="flex items-center gap-3">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSelectedAssetIds([])}
+                className="text-slate-300 hover:text-white"
+              >
+                Batal Pilih
+              </Button>
+              {features.assetAllocation && (
+                <Button
+                  variant="primary"
+                  size="sm"
+                  icon={PackagePlus}
+                  onClick={() => {
+                    const targets = filteredAssets.filter((a) => selectedAssetIds.includes(a.id));
+                    handleOpenAllocate(targets);
+                  }}
+                >
+                  Alokasikan Aset Terpilih
+                </Button>
+              )}
+              {features.assetRelocation && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  icon={ArrowRightLeft}
+                  onClick={() => {
+                    const targets = filteredAssets.filter((a) => selectedAssetIds.includes(a.id));
+                    handleOpenRelocate(targets);
+                  }}
+                >
+                  Relokasi Aset Terpilih
+                </Button>
+              )}
+            </div>
           </div>
         )}
       </div>
@@ -306,6 +507,43 @@ export const AssetManagementPage = () => {
         asset={editingAsset}
         categories={categories}
         locations={locations}
+        onSuccess={fetchData}
+      />
+
+      <AllocateAssetDialog
+        isOpen={isAllocateOpen}
+        onClose={() => setIsAllocateOpen(false)}
+        assets={targetAssetsForModal}
+        locations={locations}
+        onSuccess={() => {
+          setSelectedAssetIds([]);
+          fetchData();
+        }}
+      />
+
+      <RelocateAssetDialog
+        isOpen={isRelocateOpen}
+        onClose={() => setIsRelocateOpen(false)}
+        assets={targetAssetsForModal}
+        locations={locations}
+        onSuccess={() => {
+          setSelectedAssetIds([]);
+          fetchData();
+        }}
+      />
+
+      <StartMaintenanceDialog
+        isOpen={!!maintenanceStartAsset}
+        onClose={() => setMaintenanceStartAsset(null)}
+        asset={maintenanceStartAsset}
+        locations={locations}
+        onSuccess={fetchData}
+      />
+
+      <FinishMaintenanceDialog
+        isOpen={!!maintenanceFinishAsset}
+        onClose={() => setMaintenanceFinishAsset(null)}
+        asset={maintenanceFinishAsset}
         onSuccess={fetchData}
       />
 

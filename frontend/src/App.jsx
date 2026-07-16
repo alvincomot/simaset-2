@@ -31,6 +31,10 @@ import UserBorrowingsPage from './features/borrowing/UserBorrowingsPage';
 import BorrowingApprovalPage from './features/borrowing/BorrowingApprovalPage';
 import BorrowingHistoryPage from './features/borrowing/BorrowingHistoryPage';
 
+// Allocation & Audit
+import AllocationHistoryPage from './features/allocation/AllocationHistoryPage';
+import LocationSummaryPage from './features/allocation/LocationSummaryPage';
+
 // Root redirector based on authentication and role
 const RootRedirect = () => {
   const { isAuthenticated, role, isLoading } = useAuth();
@@ -79,6 +83,8 @@ export const App = () => {
                   <Route path="/borrowings/history" element={<BorrowingHistoryPage />} />
                   <Route path="/masters/categories" element={<CategoriesPage />} />
                   <Route path="/masters/locations" element={<LocationsPage />} />
+                  <Route path="/allocation/history" element={<AllocationHistoryPage />} />
+                  <Route path="/allocation/location-summary" element={<LocationSummaryPage />} />
                 </Route>
 
                 {/* User & General Routes (accessible by all roles or student) */}

@@ -3,7 +3,7 @@ import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import * as LucideIcons from 'lucide-react';
 import { useAuth } from '../../lib/auth/authContext';
 import { useTheme } from '../../lib/themeContext';
-import { ADMIN_STAFF_NAV_GROUPS, USER_NAV_ITEMS } from '../../lib/constants';
+import { ADMIN_STAFF_NAV_GROUPS, USER_NAV_ITEMS, features } from '../../lib/constants';
 
 export const AppShell = () => {
   const { user, role, logout } = useAuth();
@@ -35,6 +35,22 @@ export const AppShell = () => {
   }, [location.pathname, location.search]);
 
   const isAdminOrStaff = role === 'SUPER_ADMIN' || role === 'STAFF';
+
+  const adminNavGroups = React.useMemo(() => {
+    return ADMIN_STAFF_NAV_GROUPS.map((g) => {
+      if (g.title === 'Inventaris' && features.allocationHistory) {
+        return {
+          ...g,
+          items: [
+            ...g.items,
+            { label: 'Ringkasan per Lokasi', path: '/allocation/location-summary', icon: 'Layers' },
+            { label: 'Riwayat Alokasi', path: '/allocation/history', icon: 'History' },
+          ],
+        };
+      }
+      return g;
+    });
+  }, []);
 
   // Helper to get icon
   const getIcon = (iconName) => {
@@ -96,7 +112,7 @@ export const AppShell = () => {
 
             {/* Navigation Groups */}
             <nav className="flex-grow p-4 space-y-6 overflow-y-auto" aria-label="Navigasi utama">
-              {ADMIN_STAFF_NAV_GROUPS.map((group, gIdx) => (
+              {adminNavGroups.map((group, gIdx) => (
                 <div key={gIdx} className="space-y-1">
                   {!isCollapsed && (
                     <p className="px-3 pb-1 text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider select-none">
