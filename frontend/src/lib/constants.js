@@ -32,6 +32,37 @@ export const assetAvailabilityMap = {
     badgeClass: 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-800/50',
     dotClass: 'bg-amber-500',
   },
+  DIALOKASIKAN: {
+    label: 'Dialokasikan',
+    badgeClass: 'bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200 dark:border-purple-800/50',
+    dotClass: 'bg-purple-500',
+  },
+};
+
+export const enumLabels = {
+  BAIK: 'Baik',
+  RUSAK: 'Rusak',
+  TERSEDIA: 'Tersedia',
+  DIPINJAM: 'Dipinjam',
+  PEMELIHARAAN: 'Pemeliharaan',
+  DIALOKASIKAN: 'Dialokasikan', // gunakan hanya setelah backend vNext aktif
+  PENDING: 'Pending',
+  AKTIF: 'Aktif',
+  SELESAI: 'Selesai',
+};
+
+// Feature flags — seluruh fitur alokasi vNext dimatikan (false) sampai backend aktual mendukung capability lengkap
+export const features = {
+  userManagement: false,
+  borrowingRejection: false,
+  borrowingCancellation: false,
+  manualMaintenance: false,
+  reportsExport: false,
+  assetAllocation: false,
+  assetRelocation: false,
+  allocatedCatalog: false,
+  allocationMaintenance: false,
+  allocationHistory: false,
 };
 
 export const assetConditionMap = {
