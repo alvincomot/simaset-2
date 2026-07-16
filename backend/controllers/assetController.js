@@ -6,7 +6,8 @@ export const getAllAssets = async (req, res) => {
     const assets = await prisma.asset.findMany({
       include: {
         category: { select: { namaKategori: true }},
-        location: { select: { namaLokasi: true }}
+        location: { select: { namaLokasi: true }},
+        lokasiAlokasi: { select: { namaLokasi: true }}
       },
       orderBy: {createdAt: 'desc' }
     });
@@ -31,8 +32,17 @@ export const getAssetById = async (req, res) => {
       include: {
         category: true,
         location: true,
+        lokasiAlokasi: true,
         borrowings: {
           include: { user: { select: { nim: true, namaLengkap: true } } }
+        },
+        allocationHistories: {
+          include: {
+            user: { select: { namaLengkap: true, nim: true } },
+            lokasiAsal: { select: { namaLokasi: true } },
+            lokasiTujuan: { select: { namaLokasi: true } }
+          },
+          orderBy: { createdAt: 'desc' }
         }
       }
     });
@@ -171,10 +181,11 @@ export const getAssetStats = async (req, res) => {
     const totalAssets = await prisma.asset.count();
     const borrowedAssets = await prisma.asset.count({ where: { statusKetersediaan: 'DIPINJAM' } });
     const damageAssets = await prisma.asset.count({ where: { kondisi: 'RUSAK' } });
+    const allocatedAssets = await prisma.asset.count({ where: { statusKetersediaan: 'DIALOKASIKAN' } });
 
     res.status(200).json({
       status: 'success',
-      data: { totalAssets, borrowedAssets, damageAssets,}
+      data: { totalAssets, borrowedAssets, damageAssets, allocatedAssets }
     });
   } catch (error) {
     console.error('Error getAssetStats: ', error);
