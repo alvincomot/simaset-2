@@ -15,6 +15,10 @@ export const requestBorrowing = async (req, res) =>{
       return res.status(404).json({status: 'error', message: 'Aset tidak ditemukan'})
     }
 
+    if (asset.statusKetersediaan === 'DIALOKASIKAN') {
+      return res.status(400).json({ status: 'error', message: 'Aset yang dialokasikan tidak dapat diajukan untuk peminjaman umum' });
+    }
+
     if (asset.statusKetersediaan !== 'TERSEDIA') {
       return res.status(400).json({status: 'error', message: 'Aset tidak tersedia untuk dipinjam'})  
     }
@@ -49,14 +53,29 @@ export const approveBorrowing = async (req, res) => {
   try {
     const { id } = req.params;
     
-    //validate borrowing data
+    //validate borrowing data and asset availability
     const borrowing = await prisma.borrowing.findUnique({
-      where: { id: parseInt(id) }
+      where: { id: parseInt(id) },
+      include: { asset: true }
     });
     if(!borrowing || borrowing.statusPeminjaman !== 'PENDING'){
       return res.status(400).json({
         status: 'error',
         message: 'Data peminjaman tidak valid atau sudah diproses'
+      });
+    }
+
+    if (borrowing.asset.statusKetersediaan === 'DIALOKASIKAN') {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Aset ini telah dialokasikan dan tidak dapat disetujui untuk peminjaman umum'
+      });
+    }
+
+    if (borrowing.asset.statusKetersediaan !== 'TERSEDIA') {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Aset saat ini tidak tersedia (mungkin sedang dipinjam atau dalam pemeliharaan)'
       });
     }
 
