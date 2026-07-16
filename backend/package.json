@@ -5,7 +5,8 @@
   "main": "server.js",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "node tests/run_integration_tests.js",
+    "test:integration": "node tests/run_integration_tests.js",
     "start": "node server.js"
   },
   "prisma": {
