@@ -47,11 +47,30 @@ export const updateLocation = async (req, res) => {
 export const deleteLocation = async (req, res) => {
   try {
     const { id } = req.params;
-    await prisma.location.delete({ where: { id: parseInt(id) } });
+    const locationId = parseInt(id);
+
+    // Cek apakah lokasi masih digunakan oleh aset (baik sebagai lokasi aktual maupun alokasi)
+    const usedAssetsCount = await prisma.asset.count({
+      where: {
+        OR: [
+          { locationId: locationId },
+          { lokasiAlokasiId: locationId }
+        ]
+      }
+    });
+
+    if (usedAssetsCount > 0) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Lokasi tidak dapat dihapus karena masih digunakan oleh aset (sebagai lokasi aktual atau lokasi alokasi)'
+      });
+    }
+
+    await prisma.location.delete({ where: { id: locationId } });
     res.status(200).json({ status: 'success', message: 'Lokasi berhasil dihapus'});
   } catch (error) {
     if (error.code === 'P2003') {
-      return res.status(400).json({ status: 'error', message: 'Lokasi tidak dapat dihapus karena masih memiliki data aset'});
+      return res.status(400).json({ status: 'error', message: 'Lokasi tidak dapat dihapus karena masih memiliki data aset atau riwayat alokasi'});
     }
     res.status(500).json({ status: 'error', message: 'Gagal menghapus data lokasi'});
   }
