@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Box, Lock, User, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../lib/auth/authContext';
 import Button from '../../components/ui/Button';
@@ -7,8 +7,6 @@ import Button from '../../components/ui/Button';
 export const LoginPage = () => {
   const { login, isLoading } = useAuth();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const returnTo = searchParams.get('returnTo');
 
   const [nim, setNim] = useState('');
   const [password, setPassword] = useState('');
@@ -25,21 +23,7 @@ export const LoginPage = () => {
 
     const result = await login(nim.trim(), password);
     if (result.success) {
-      const userRole = result.user?.role;
-      // Validasi apakah returnTo aman/diizinkan untuk role pengguna
-      const isAllowedForUser = (url, role) => {
-        if (!url || !url.startsWith('/')) return false;
-        if (role === 'SUPER_ADMIN' || role === 'STAFF') return true;
-        // Mahasiswa (USER) tidak boleh ke rute khusus admin/staff
-        if (url.startsWith('/dashboard') || url.startsWith('/masters')) return false;
-        if (url === '/assets' || url.startsWith('/assets?')) return false;
-        if (url.startsWith('/borrowings') && !url.startsWith('/my-borrowings')) return false;
-        return true;
-      };
-
-      if (returnTo && isAllowedForUser(returnTo, userRole)) {
-        navigate(returnTo, { replace: true });
-      } else if (userRole === 'SUPER_ADMIN' || userRole === 'STAFF') {
+      if (result.user.role === 'SUPER_ADMIN' || result.user.role === 'STAFF') {
         navigate('/dashboard', { replace: true });
       } else {
         navigate('/catalog', { replace: true });
