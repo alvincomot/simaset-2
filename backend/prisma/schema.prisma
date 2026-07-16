@@ -27,26 +27,35 @@ enum StatusKetersediaan {
   TERSEDIA
   DIPINJAM
   PEMELIHARAAN
+  DIALOKASIKAN
+}
+
+enum JenisKejadian {
+  ALOKASI
+  RELOKASI
+  MASUK_SERVIS
+  SELESAI_SERVIS
 }
 
 model user {
-  id           Int         @id @default(autoincrement())
-  nim          String      @unique @db.VarChar(20)
-  namaLengkap  String      @db.VarChar(100)
-  password     String      @db.VarChar(255)
-  role         Role        @default(USER)
-  createdAt    DateTime    @default(now())
-  resetToken   String?     @db.VarChar(255)
+  id               Int                  @id @default(autoincrement())
+  nim              String               @unique @db.VarChar(20)
+  namaLengkap      String               @db.VarChar(100)
+  password         String               @db.VarChar(255)
+  role             Role                 @default(USER)
+  createdAt        DateTime             @default(now())
+  resetToken       String?              @db.VarChar(255)
   resetTokenExpiry DateTime?
   
-  // Relasi One-to-Many: 1 User bisa punya banyak transaksi peminjaman
-  borrowings   borrowing[]
+  // Relasi
+  borrowings         borrowing[]
+  allocationHistories allocation_history[]
 }
 
 model category {
   id           Int         @id @default(autoincrement())
   namaKategori String      @db.VarChar(50)
-  deskripsi    String?     @db.Text // Tanda tanya (?) berarti Nullable
+  deskripsi    String?     @db.Text
   createdAt    DateTime    @default(now())
   
   // Relasi
@@ -54,13 +63,16 @@ model category {
 }
 
 model location {
-  id           Int         @id @default(autoincrement())
-  namaLokasi   String      @db.VarChar(50)
-  deskripsi    String?     @db.Text
-  createdAt    DateTime    @default(now())
+  id                     Int                  @id @default(autoincrement())
+  namaLokasi             String               @db.VarChar(50)
+  deskripsi              String?              @db.Text
+  createdAt              DateTime             @default(now())
   
   // Relasi
-  assets       asset[]
+  assets                 asset[]              @relation("AssetActualLocation")
+  allocatedAssets        asset[]              @relation("AssetAllocatedLocation")
+  historyAsalLocations   allocation_history[] @relation("HistoryLokasiAsal")
+  historyTujuanLocations allocation_history[] @relation("HistoryLokasiTujuan")
 }
 
 model asset {
@@ -69,14 +81,17 @@ model asset {
   namaAset           String             @db.VarChar(150)
   categoryId         Int
   locationId         Int
+  lokasiAlokasiId    Int?
   kondisi            KondisiAset        @default(BAIK)
   statusKetersediaan StatusKetersediaan @default(TERSEDIA)
   createdAt          DateTime           @default(now())
 
   // Definisi Foreign Key
   category           category           @relation(fields: [categoryId], references: [id])
-  location           location           @relation(fields: [locationId], references: [id])
+  location           location           @relation("AssetActualLocation", fields: [locationId], references: [id])
+  lokasiAlokasi      location?          @relation("AssetAllocatedLocation", fields: [lokasiAlokasiId], references: [id])
   borrowings         borrowing[]
+  allocationHistories allocation_history[]
 }
 
 model borrowing {
@@ -86,7 +101,7 @@ model borrowing {
   tanggalPinjam    DateTime
   tenggatWaktu     DateTime
   tanggalKembali   DateTime?
-  statusPeminjaman String      @default("Menunggu") // Bisa juga pakai Enum
+  statusPeminjaman String      @default("Menunggu")
   kondisiKembali   KondisiAset?
   catatan          String?     @db.Text
   createdAt        DateTime    @default(now())
@@ -94,4 +109,21 @@ model borrowing {
   // Definisi Foreign Key
   user             user        @relation(fields: [userId], references: [id])
   asset            asset       @relation(fields: [assetId], references: [id])
+}
+
+model allocation_history {
+  id             Int           @id @default(autoincrement())
+  assetId        Int
+  userId         Int
+  jenisKejadian  JenisKejadian
+  lokasiAsalId   Int?
+  lokasiTujuanId Int?
+  catatan        String?       @db.Text
+  createdAt      DateTime      @default(now())
+
+  // Relasi
+  asset          asset         @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  user           user          @relation(fields: [userId], references: [id])
+  lokasiAsal     location?     @relation("HistoryLokasiAsal", fields: [lokasiAsalId], references: [id])
+  lokasiTujuan   location?     @relation("HistoryLokasiTujuan", fields: [lokasiTujuanId], references: [id])
 }
