@@ -25,9 +25,21 @@ export const LoginPage = () => {
 
     const result = await login(nim.trim(), password);
     if (result.success) {
-      if (returnTo) {
+      const userRole = result.user?.role;
+      // Validasi apakah returnTo aman/diizinkan untuk role pengguna
+      const isAllowedForUser = (url, role) => {
+        if (!url || !url.startsWith('/')) return false;
+        if (role === 'SUPER_ADMIN' || role === 'STAFF') return true;
+        // Mahasiswa (USER) tidak boleh ke rute khusus admin/staff
+        if (url.startsWith('/dashboard') || url.startsWith('/masters')) return false;
+        if (url === '/assets' || url.startsWith('/assets?')) return false;
+        if (url.startsWith('/borrowings') && !url.startsWith('/my-borrowings')) return false;
+        return true;
+      };
+
+      if (returnTo && isAllowedForUser(returnTo, userRole)) {
         navigate(returnTo, { replace: true });
-      } else if (result.user.role === 'SUPER_ADMIN' || result.user.role === 'STAFF') {
+      } else if (userRole === 'SUPER_ADMIN' || userRole === 'STAFF') {
         navigate('/dashboard', { replace: true });
       } else {
         navigate('/catalog', { replace: true });
