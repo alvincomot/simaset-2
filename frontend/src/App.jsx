@@ -1,122 +1,104 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './lib/auth/authContext';
+import { ThemeProvider } from './lib/themeContext';
+import { ToastProvider } from './components/feedback/ToastProvider';
 
-function App() {
-  const [count, setCount] = useState(0)
+// Layouts & Guards
+import AppShell from './components/layout/AppShell';
+import RoleGuard from './components/layout/RoleGuard';
+import NotFoundPage from './components/layout/NotFoundPage';
 
+// Auth Features
+import LoginPage from './features/auth/LoginPage';
+import ForgotPasswordPage from './features/auth/ForgotPasswordPage';
+import ResetPasswordPage from './features/auth/ResetPasswordPage';
+
+// Dashboard
+import DashboardPage from './features/dashboard/DashboardPage';
+
+// Assets
+import AssetCatalogPage from './features/assets/AssetCatalogPage';
+import AssetDetailPage from './features/assets/AssetDetailPage';
+import AssetManagementPage from './features/assets/AssetManagementPage';
+
+// Masters
+import CategoriesPage from './features/masters/CategoriesPage';
+import LocationsPage from './features/masters/LocationsPage';
+
+// Borrowing
+import UserBorrowingsPage from './features/borrowing/UserBorrowingsPage';
+import BorrowingApprovalPage from './features/borrowing/BorrowingApprovalPage';
+import BorrowingHistoryPage from './features/borrowing/BorrowingHistoryPage';
+
+// Root redirector based on authentication and role
+const RootRedirect = () => {
+  const { isAuthenticated, role, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
+        <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (role === 'SUPER_ADMIN' || role === 'STAFF') {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return <Navigate to="/catalog" replace />;
+};
+
+export const App = () => {
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <ThemeProvider>
+      <AuthProvider>
+        <ToastProvider>
+          <BrowserRouter>
+            <Routes>
+              {/* Public Auth Routes */}
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+              <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
 
-      <div className="ticks"></div>
+              {/* Root redirect */}
+              <Route path="/" element={<RootRedirect />} />
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+              {/* Protected Workspace Layout */}
+              <Route element={<AppShell />}>
+                {/* Admin & Staff Only Routes */}
+                <Route element={<RoleGuard allowedRoles={['SUPER_ADMIN', 'STAFF']} />}>
+                  <Route path="/dashboard" element={<DashboardPage />} />
+                  <Route path="/assets" element={<AssetManagementPage />} />
+                  <Route path="/borrowings" element={<BorrowingApprovalPage />} />
+                  <Route path="/borrowings/history" element={<BorrowingHistoryPage />} />
+                  <Route path="/masters/categories" element={<CategoriesPage />} />
+                  <Route path="/masters/locations" element={<LocationsPage />} />
+                </Route>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
-}
+                {/* User & General Routes (accessible by all roles or student) */}
+                <Route element={<RoleGuard allowedRoles={['USER', 'SUPER_ADMIN', 'STAFF']} />}>
+                  <Route path="/catalog" element={<AssetCatalogPage />} />
+                  <Route path="/catalog/:id" element={<AssetDetailPage />} />
+                  <Route path="/assets/:id" element={<AssetDetailPage />} />
+                  <Route path="/my-borrowings" element={<UserBorrowingsPage />} />
+                  <Route path="/my-borrowings/history" element={<BorrowingHistoryPage />} />
+                </Route>
+              </Route>
 
-export default App
+              {/* Catch all 404 */}
+              <Route path="*" element={<NotFoundPage />} />
+            </Routes>
+          </BrowserRouter>
+        </ToastProvider>
+      </AuthProvider>
+    </ThemeProvider>
+  );
+};
+
+export default App;
