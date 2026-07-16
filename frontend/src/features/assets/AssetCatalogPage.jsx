@@ -62,10 +62,10 @@ export const AssetCatalogPage = () => {
         asset.kodeAset?.toLowerCase().includes(searchQuery.toLowerCase());
 
       const matchCategory =
-        selectedCategory === 'ALL' || String(asset.kategoriId) === String(selectedCategory);
+        selectedCategory === 'ALL' || String(asset.categoryId) === String(selectedCategory);
 
       const matchLocation =
-        selectedLocation === 'ALL' || String(asset.lokasiId) === String(selectedLocation);
+        selectedLocation === 'ALL' || String(asset.locationId) === String(selectedLocation);
 
       const matchAvailability =
         selectedAvailability === 'ALL' || asset.statusKetersediaan === selectedAvailability;
