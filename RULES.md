@@ -17,3 +17,8 @@
 - **DILARANG MENGGUNAKAN SCOPE/KURUNG DI COMMIT**: Penulisan commit **wajib** murni langsung ke pesannya, tanpa menambahkan *scope* file di dalam kurung.
   - ✅ **BENAR**: `feat: add user registration form`
   - ❌ **SALAH**: `feat(Register): add user registration form` (Dilarang menggunakan kurung/scope nama file)
+
+## Aturan File Markdown (.md)
+- **DILARANG** melakukan commit atau push file berekstensi `.md` ke repository.
+- **PENGECUALIAN**: Hanya `PRD.md` dan `RULES.md` yang boleh di-track oleh git.
+- Semua file `.md` lainnya (design docs, prompt, kontrak, README, dll) harus tetap lokal dan tidak masuk ke repository.
