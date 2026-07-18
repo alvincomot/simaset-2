@@ -1,41 +1,41 @@
 export const borrowingStatusMap = {
   PENDING: {
     label: 'Pending',
-    badgeClass: 'bg-orange-50 text-orange-700 dark:bg-orange-950 dark:text-orange-200 border border-orange-200 dark:border-orange-700',
-    dotClass: 'bg-orange-500 dark:bg-orange-400',
+    badgeClass: 'badge-orange border',
+    dotClass: 'dot-orange',
   },
   AKTIF: {
     label: 'Aktif',
-    badgeClass: 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-200 border border-indigo-200 dark:border-indigo-700',
-    dotClass: 'bg-indigo-500 dark:bg-indigo-400',
+    badgeClass: 'badge-indigo border',
+    dotClass: 'dot-indigo',
   },
   SELESAI: {
     label: 'Selesai',
-    badgeClass: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-700',
-    dotClass: 'bg-emerald-500 dark:bg-emerald-400',
+    badgeClass: 'badge-emerald border',
+    dotClass: 'dot-emerald',
   },
 };
 
 export const assetAvailabilityMap = {
   TERSEDIA: {
     label: 'Tersedia',
-    badgeClass: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-700',
-    dotClass: 'bg-emerald-500 dark:bg-emerald-400',
+    badgeClass: 'badge-emerald border',
+    dotClass: 'dot-emerald',
   },
   DIPINJAM: {
     label: 'Dipinjam',
-    badgeClass: 'bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-200 border border-blue-200 dark:border-blue-700',
-    dotClass: 'bg-blue-500 dark:bg-blue-400',
+    badgeClass: 'badge-blue border',
+    dotClass: 'dot-blue',
   },
   PEMELIHARAAN: {
     label: 'Pemeliharaan',
-    badgeClass: 'bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-200 border border-amber-200 dark:border-amber-700',
-    dotClass: 'bg-amber-500 dark:bg-amber-400',
+    badgeClass: 'badge-amber border',
+    dotClass: 'dot-amber',
   },
   DIALOKASIKAN: {
     label: 'Dialokasikan',
-    badgeClass: 'bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-200 border border-purple-200 dark:border-purple-700',
-    dotClass: 'bg-purple-500 dark:bg-purple-400',
+    badgeClass: 'badge-purple border',
+    dotClass: 'dot-purple',
   },
 };
 
@@ -54,22 +54,22 @@ export const enumLabels = {
 export const jenisKejadianMap = {
   ALOKASI: {
     label: 'Alokasi ke Lokasi',
-    badgeClass: 'bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-200 border border-purple-200 dark:border-purple-700',
+    badgeClass: 'badge-purple border',
     icon: 'PackagePlus',
   },
   RELOKASI: {
     label: 'Relokasi Aset',
-    badgeClass: 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-200 border border-indigo-200 dark:border-indigo-700',
+    badgeClass: 'badge-indigo border',
     icon: 'ArrowRightLeft',
   },
   MASUK_SERVIS: {
     label: 'Masuk Pemeliharaan',
-    badgeClass: 'bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-200 border border-amber-200 dark:border-amber-700',
+    badgeClass: 'badge-amber border',
     icon: 'Wrench',
   },
   SELESAI_SERVIS: {
     label: 'Selesai Servis & Kembali',
-    badgeClass: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-700',
+    badgeClass: 'badge-emerald border',
     icon: 'CheckCircle2',
   },
 };
@@ -91,13 +91,13 @@ export const features = {
 export const assetConditionMap = {
   BAIK: {
     label: 'Baik',
-    badgeClass: 'bg-teal-50 text-teal-700 dark:bg-teal-950 dark:text-teal-200 border border-teal-200 dark:border-teal-700',
-    dotClass: 'bg-teal-500 dark:bg-teal-400',
+    badgeClass: 'badge-teal border',
+    dotClass: 'dot-teal',
   },
   RUSAK: {
     label: 'Rusak',
-    badgeClass: 'bg-rose-50 text-rose-700 dark:bg-rose-950 dark:text-rose-200 border border-rose-200 dark:border-rose-700',
-    dotClass: 'bg-rose-500 dark:bg-rose-400',
+    badgeClass: 'badge-rose border',
+    dotClass: 'dot-rose',
   },
 };
 

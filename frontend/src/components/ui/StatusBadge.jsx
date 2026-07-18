@@ -5,7 +5,7 @@ export const StatusBadge = ({ status, type = 'availability', className = '' }) =
   const map = type === 'borrowing' ? borrowingStatusMap : assetAvailabilityMap;
   const config = map[status] || {
     label: status || 'Unknown',
-    badgeClass: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700',
+    badgeClass: 'bg-slate-100 text-slate-700 border border-slate-200',
     dotClass: 'bg-slate-400',
   };
 

@@ -4,7 +4,7 @@ import { assetConditionMap } from '../../lib/constants';
 export const ConditionBadge = ({ condition, className = '' }) => {
   const config = assetConditionMap[condition] || {
     label: condition || 'Unknown',
-    badgeClass: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700',
+    badgeClass: 'bg-slate-100 text-slate-700 border border-slate-200',
     dotClass: 'bg-slate-400',
   };
 

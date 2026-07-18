@@ -78,4 +78,87 @@
     backdrop-filter: blur(16px);
     border: 1px solid rgba(38, 50, 71, 0.6);
   }
+
+  /* ── Badge Color System ── */
+  /* Uses explicit .dark selector to guarantee dark mode override */
+
+  /* Teal (Kondisi: Baik) */
+  .badge-teal {
+    background-color: #f0fdfa; color: #0f766e; border-color: #99f6e4;
+  }
+  .dark .badge-teal {
+    background-color: #042f2e; color: #99f6e4; border-color: #115e59;
+  }
+  .dot-teal { background-color: #14b8a6; }
+  .dark .dot-teal { background-color: #5eead4; }
+
+  /* Rose (Kondisi: Rusak) */
+  .badge-rose {
+    background-color: #fff1f2; color: #be123c; border-color: #fecdd3;
+  }
+  .dark .badge-rose {
+    background-color: #4c0519; color: #fecdd3; border-color: #9f1239;
+  }
+  .dot-rose { background-color: #f43f5e; }
+  .dark .dot-rose { background-color: #fb7185; }
+
+  /* Emerald (Tersedia / Selesai) */
+  .badge-emerald {
+    background-color: #ecfdf5; color: #047857; border-color: #a7f3d0;
+  }
+  .dark .badge-emerald {
+    background-color: #022c22; color: #a7f3d0; border-color: #065f46;
+  }
+  .dot-emerald { background-color: #10b981; }
+  .dark .dot-emerald { background-color: #6ee7b7; }
+
+  /* Blue (Dipinjam) */
+  .badge-blue {
+    background-color: #eff6ff; color: #1d4ed8; border-color: #bfdbfe;
+  }
+  .dark .badge-blue {
+    background-color: #172554; color: #bfdbfe; border-color: #1e40af;
+  }
+  .dot-blue { background-color: #3b82f6; }
+  .dark .dot-blue { background-color: #93c5fd; }
+
+  /* Amber (Pemeliharaan / Masuk Servis) */
+  .badge-amber {
+    background-color: #fffbeb; color: #b45309; border-color: #fde68a;
+  }
+  .dark .badge-amber {
+    background-color: #451a03; color: #fde68a; border-color: #92400e;
+  }
+  .dot-amber { background-color: #f59e0b; }
+  .dark .dot-amber { background-color: #fbbf24; }
+
+  /* Purple (Dialokasikan / Alokasi) */
+  .badge-purple {
+    background-color: #faf5ff; color: #7e22ce; border-color: #e9d5ff;
+  }
+  .dark .badge-purple {
+    background-color: #3b0764; color: #e9d5ff; border-color: #6b21a8;
+  }
+  .dot-purple { background-color: #a855f7; }
+  .dark .dot-purple { background-color: #c084fc; }
+
+  /* Indigo (Aktif / Relokasi) */
+  .badge-indigo {
+    background-color: #eef2ff; color: #4338ca; border-color: #c7d2fe;
+  }
+  .dark .badge-indigo {
+    background-color: #1e1b4b; color: #c7d2fe; border-color: #3730a3;
+  }
+  .dot-indigo { background-color: #6366f1; }
+  .dark .dot-indigo { background-color: #a5b4fc; }
+
+  /* Orange (Pending) */
+  .badge-orange {
+    background-color: #fff7ed; color: #c2410c; border-color: #fed7aa;
+  }
+  .dark .badge-orange {
+    background-color: #431407; color: #fed7aa; border-color: #9a3412;
+  }
+  .dot-orange { background-color: #f97316; }
+  .dark .dot-orange { background-color: #fb923c; }
 }
