@@ -249,8 +249,8 @@ export const AssetManagementPage = () => {
               className="h-11 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-800 dark:text-slate-200 text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
               <option value="ALL">Semua Kondisi</option>
-              <option value="BAIK">BAIK</option>
-              <option value="RUSAK">RUSAK</option>
+              <option value="BAIK">Baik</option>
+              <option value="RUSAK">Rusak</option>
             </select>
           </div>
         </div>
@@ -345,16 +345,9 @@ export const AssetManagementPage = () => {
                         {asset.category?.namaKategori || 'Umum'}
                       </td>
                       <td className="py-4 px-6 text-slate-600 dark:text-slate-300">
-                        <div>
-                          <p className="font-medium text-slate-800 dark:text-slate-200">
-                            {asset.location?.namaLokasi || 'Gudang'}
-                          </p>
-                          {asset.lokasiAlokasiId && (
-                            <p className="text-xs text-purple-600 dark:text-purple-400 mt-0.5 font-semibold">
-                              Alokasi: {asset.lokasiAlokasi?.namaLokasi || `#${asset.lokasiAlokasiId}`}
-                            </p>
-                          )}
-                        </div>
+                        <p className="font-medium text-slate-800 dark:text-slate-200">
+                          {asset.location?.namaLokasi || 'Gudang'}
+                        </p>
                       </td>
                       <td className="py-4 px-6">
                         <StatusBadge status={asset.statusKetersediaan} />
@@ -388,21 +381,22 @@ export const AssetManagementPage = () => {
                         )}
 
                         {/* Masuk Servis Action */}
-                        {features.allocationMaintenance && asset.statusKetersediaan === 'DIALOKASIKAN' && (
-                          <button
-                            type="button"
-                            onClick={() => setMaintenanceStartAsset(asset)}
-                            className="p-1.5 rounded-lg text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/60 transition-colors"
-                            title="Pindahkan ke Pemeliharaan"
-                          >
-                            <Wrench className="w-4 h-4" />
-                          </button>
-                        )}
+                        {features.allocationMaintenance &&
+                          (asset.statusKetersediaan === 'DIALOKASIKAN' ||
+                            asset.statusKetersediaan === 'TERSEDIA') && (
+                            <button
+                              type="button"
+                              onClick={() => setMaintenanceStartAsset(asset)}
+                              className="p-1.5 rounded-lg text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/60 transition-colors"
+                              title="Pindahkan ke Pemeliharaan"
+                            >
+                              <Wrench className="w-4 h-4" />
+                            </button>
+                          )}
 
                         {/* Selesaikan Servis Action */}
                         {features.allocationMaintenance &&
-                          asset.statusKetersediaan === 'PEMELIHARAAN' &&
-                          asset.lokasiAlokasiId && (
+                          asset.statusKetersediaan === 'PEMELIHARAAN' && (
                             <button
                               type="button"
                               onClick={() => setMaintenanceFinishAsset(asset)}
@@ -443,21 +437,21 @@ export const AssetManagementPage = () => {
 
         {/* Sticky Bulk Action Bar */}
         {selectedAssetIds.length > 0 && (
-          <div className="sticky bottom-0 inset-x-0 bg-slate-900/95 dark:bg-slate-800/95 backdrop-blur-md text-white px-6 py-4 border-t border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-in slide-in-from-bottom duration-200 z-20">
+          <div className="sticky bottom-0 inset-x-0 bg-slate-50 dark:bg-slate-900 border-slate-300 dark:border-slate-700 backdrop-blur-md text-white px-6 py-4 border-t flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-in slide-in-from-bottom duration-200 z-20">
             <div className="flex items-center gap-3">
               <span className="px-3 py-1 rounded-xl bg-indigo-600 text-white font-bold text-sm">
                 {selectedAssetIds.length} Terpilih
               </span>
-              <span className="text-xs text-slate-300">
+              <span className="text-xs text-slate-500 dark:text-slate-400">
                 Pilih aksi alokasi atau relokasi untuk aset dalam batch.
               </span>
             </div>
             <div className="flex items-center gap-3">
               <Button
-                variant="ghost"
+                variant="secondary"
                 size="sm"
                 onClick={() => setSelectedAssetIds([])}
-                className="text-slate-300 hover:text-white"
+                className=""
               >
                 Batal Pilih
               </Button>

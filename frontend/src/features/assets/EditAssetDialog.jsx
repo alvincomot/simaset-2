@@ -12,7 +12,6 @@ export const EditAssetDialog = ({ isOpen, onClose, asset, categories = [], locat
   const [kodeAset, setKodeAset] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [locationId, setLocationId] = useState('');
-  const [statusKetersediaan, setStatusKetersediaan] = useState('TERSEDIA');
   const [kondisi, setKondisi] = useState('BAIK');
 
   const [isLoading, setIsLoading] = useState(false);
@@ -25,7 +24,6 @@ export const EditAssetDialog = ({ isOpen, onClose, asset, categories = [], locat
       setKodeAset(asset.kodeAset || '');
       setCategoryId(String(asset.categoryId || ''));
       setLocationId(String(asset.locationId || ''));
-      setStatusKetersediaan(asset.statusKetersediaan || 'TERSEDIA');
       setKondisi(asset.kondisi || 'BAIK');
     }
   }, [isOpen, asset]);
@@ -48,7 +46,6 @@ export const EditAssetDialog = ({ isOpen, onClose, asset, categories = [], locat
       await client.put(`/assets/${asset.id}`, {
         namaAset: namaAset.trim(),
         kodeAset: kodeAset.trim(),
-        statusKetersediaan,
         kondisi,
         categoryId: Number(categoryId),
         locationId: Number(locationId),
@@ -69,7 +66,7 @@ export const EditAssetDialog = ({ isOpen, onClose, asset, categories = [], locat
       isOpen={isOpen}
       onClose={!isLoading ? onClose : undefined}
       title="Edit Spesifikasi Aset"
-      maxWidthClass="max-w-lg"
+      maxWidthClass="max-w-md"
       closeOnBackdrop={!isLoading}
       footer={
         <>
@@ -99,6 +96,7 @@ export const EditAssetDialog = ({ isOpen, onClose, asset, categories = [], locat
             required
             value={namaAset}
             onChange={(e) => setNamaAset(e.target.value)}
+            placeholder="Contoh: Proyektor Epson EB-X06"
             className="mt-1 block w-full px-3.5 h-10 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
           />
         </div>
@@ -110,9 +108,9 @@ export const EditAssetDialog = ({ isOpen, onClose, asset, categories = [], locat
           <input
             type="text"
             required
+            disabled
             value={kodeAset}
-            onChange={(e) => setKodeAset(e.target.value)}
-            className="mt-1 block w-full px-3.5 h-10 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono text-sm"
+            className="mt-1 block w-full px-3.5 h-10 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 font-mono text-sm cursor-not-allowed"
           />
         </div>
 
@@ -154,35 +152,18 @@ export const EditAssetDialog = ({ isOpen, onClose, asset, categories = [], locat
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-              Status Ketersediaan
-            </label>
-            <select
-              value={statusKetersediaan}
-              onChange={(e) => setStatusKetersediaan(e.target.value)}
-              className="mt-1 block w-full px-3 h-10 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
-            >
-              <option value="TERSEDIA">TERSEDIA</option>
-              <option value="DIPINJAM">DIPINJAM</option>
-              <option value="PEMELIHARAAN">PEMELIHARAAN</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-              Kondisi Fisik
-            </label>
-            <select
-              value={kondisi}
-              onChange={(e) => setKondisi(e.target.value)}
-              className="mt-1 block w-full px-3 h-10 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
-            >
-              <option value="BAIK">BAIK</option>
-              <option value="RUSAK">RUSAK</option>
-            </select>
-          </div>
+        <div className="pt-1">
+          <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+            Kondisi Fisik
+          </label>
+          <select
+            value={kondisi}
+            onChange={(e) => setKondisi(e.target.value)}
+            className="mt-1 block w-full px-3 h-10 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+          >
+            <option value="BAIK">Baik</option>
+            <option value="RUSAK">Rusak</option>
+          </select>
         </div>
       </form>
     </Modal>

@@ -7,7 +7,9 @@
   "scripts": {
     "test": "node tests/run_integration_tests.js",
     "test:integration": "node tests/run_integration_tests.js",
-    "start": "node server.js"
+    "start": "node server.js",
+    "seed": "node prisma/seed.js",
+    "migrate:fresh": "npx prisma migrate reset --force"
   },
   "prisma": {
     "seed": "node prisma/seed.js"

@@ -19,7 +19,12 @@ export const FinishMaintenanceDialog = ({
 
   if (!isOpen || !asset) return null;
 
-  const asalName = asset.lokasiAlokasi?.namaLokasi || asset.location?.namaLokasi || 'Lokasi Alokasi Asal';
+  const lastServisAsal =
+    asset.allocationHistories?.[0]?.lokasiAsal?.namaLokasi ||
+    (Array.isArray(asset.allocationHistories) &&
+      asset.allocationHistories.find((h) => h.jenisKejadian === 'MASUK_SERVIS')?.lokasiAsal?.namaLokasi);
+
+  const asalName = asset.lokasiAlokasi?.namaLokasi || lastServisAsal || asset.location?.namaLokasi || 'Lokasi Asal';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -42,10 +47,13 @@ export const FinishMaintenanceDialog = ({
         catatan: catatan.trim(),
       });
 
+      const isAllocatedAsset = !!asset.lokasiAlokasiId;
       if (kondisiHasil === 'BAIK') {
         toast.success(
           'Servis Selesai & Dikembalikan',
-          `"${asset.namaAset}" kembali ke status DIALOKASIKAN dan berada di ${asalName}.`
+          `"${asset.namaAset}" kembali ke status ${
+            isAllocatedAsset ? 'DIALOKASIKAN' : 'TERSEDIA'
+          } dan berada di ${asalName}.`
         );
       } else {
         toast.info(
@@ -114,7 +122,7 @@ export const FinishMaintenanceDialog = ({
               </span>
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Tujuan Pengembalian (Lokasi Alokasi): <strong className="text-indigo-600 dark:text-indigo-400 font-bold">{asalName}</strong>
+              Tujuan Pengembalian ({asset.lokasiAlokasiId ? 'Lokasi Alokasi' : 'Lokasi Penempatan'}): <strong className="text-indigo-600 dark:text-indigo-400 font-bold">{asalName}</strong>
             </p>
           </div>
 
@@ -188,7 +196,7 @@ export const FinishMaintenanceDialog = ({
                 className="mt-0.5 w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300"
               />
               <span className="text-xs text-slate-700 dark:text-slate-300 font-medium">
-                Saya mengonfirmasi bahwa aset ini telah <strong className="font-bold">dikembalikan secara fisik ke lokasi alokasi ({asalName})</strong> dan siap digunakan kembali untuk kegiatan operasional.
+                Saya mengonfirmasi bahwa aset ini telah <strong className="font-bold">dikembalikan secara fisik ke {asset.lokasiAlokasiId ? 'lokasi alokasi' : 'lokasi semula'} ({asalName})</strong> dan siap digunakan kembali untuk kegiatan operasional.
               </span>
             </label>
           ) : (

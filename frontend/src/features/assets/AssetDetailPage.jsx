@@ -100,6 +100,7 @@ export const AssetDetailPage = () => {
   }
 
   const isAvailable = asset.statusKetersediaan === 'TERSEDIA';
+  const isBorrowable = asset.statusKetersediaan === 'TERSEDIA' && asset.kondisi === 'BAIK';
   const isAllocated = asset.statusKetersediaan === 'DIALOKASIKAN';
   const isMaintenance = asset.statusKetersediaan === 'PEMELIHARAAN';
 
@@ -144,9 +145,16 @@ export const AssetDetailPage = () => {
               <Button
                 variant="primary"
                 size="lg"
-                disabled={!isAvailable}
+                disabled={!isBorrowable}
                 onClick={() => setIsBorrowModalOpen(true)}
                 className="w-full sm:w-auto shadow-xl"
+                title={
+                  isBorrowable
+                    ? 'Ajukan Pinjaman'
+                    : asset.kondisi === 'RUSAK'
+                    ? 'Aset rusak dan tidak dapat dipinjam'
+                    : 'Aset sedang tidak tersedia'
+                }
               >
                 Ajukan Pinjaman
               </Button>
@@ -175,7 +183,7 @@ export const AssetDetailPage = () => {
                     Pindahkan Alokasi
                   </Button>
                 )}
-                {features.allocationMaintenance && isAllocated && (
+                {features.allocationMaintenance && (isAllocated || isAvailable) && (
                   <Button
                     variant="secondary"
                     size="sm"
@@ -185,7 +193,7 @@ export const AssetDetailPage = () => {
                     Pindahkan ke Pemeliharaan
                   </Button>
                 )}
-                {features.allocationMaintenance && isMaintenance && asset.lokasiAlokasiId && (
+                {features.allocationMaintenance && isMaintenance && (
                   <Button
                     variant="secondary"
                     size="sm"

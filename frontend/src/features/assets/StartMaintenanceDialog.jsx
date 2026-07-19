@@ -12,19 +12,22 @@ export const StartMaintenanceDialog = ({
   onSuccess,
 }) => {
   const toast = useToast();
-  const [lokasiServisId, setLokasiServisId] = useState('');
   const [catatan, setCatatan] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
   if (!isOpen || !asset) return null;
 
+  const defaultServisLoc = locations.find(
+    (l) =>
+      l.namaLokasi?.toLowerCase().includes('servis') ||
+      l.namaLokasi?.toLowerCase().includes('perbaikan')
+  );
+  const targetServisName = defaultServisLoc?.namaLokasi || 'Ruang Servis / Perbaikan';
+  const asalName = asset.lokasiAlokasi?.namaLokasi || asset.location?.namaLokasi || 'Lokasi Asal';
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!lokasiServisId) {
-      setErrorMsg('Pilih ruang servis/perbaikan terlebih dahulu.');
-      return;
-    }
     if (!catatan.trim()) {
       setErrorMsg('Catatan kerusakan atau keluhan wajib diisi untuk rekam servis.');
       return;
@@ -34,22 +37,18 @@ export const StartMaintenanceDialog = ({
     setErrorMsg('');
 
     try {
+      const servisIdToUse = defaultServisLoc?.id ? Number(defaultServisLoc.id) : undefined;
       const res = await startMaintenance({
         assetId: asset.id,
-        lokasiServisId: Number(lokasiServisId),
+        lokasiServisId: servisIdToUse,
         catatan: catatan.trim(),
       });
 
-      const servisLocName =
-        locations.find((l) => String(l.id) === String(lokasiServisId))?.namaLokasi ||
-        'Ruang Servis';
-
       toast.success(
         'Masuk Pemeliharaan Berhasil',
-        `"${asset.namaAset}" dipindahkan ke ${servisLocName} (status PEMELIHARAAN). Lokasi alokasi asal tetap dipertahankan.`
+        `"${asset.namaAset}" dipindahkan ke ${targetServisName} (status PEMELIHARAAN). Lokasi alokasi asal tetap dipertahankan.`
       );
 
-      setLokasiServisId('');
       setCatatan('');
       onSuccess && onSuccess(res);
       onClose();
@@ -59,9 +58,6 @@ export const StartMaintenanceDialog = ({
       setIsSubmitting(false);
     }
   };
-
-  const selectedServisLoc = locations.find((l) => String(l.id) === String(lokasiServisId));
-  const asalName = asset.lokasiAlokasi?.namaLokasi || asset.location?.namaLokasi || 'Lokasi Asal';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-200">
@@ -77,7 +73,9 @@ export const StartMaintenanceDialog = ({
                 Pindahkan ke Pemeliharaan
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Aset masuk servis tanpa kehilangan lokasi alokasi asal
+                {asset.lokasiAlokasiId
+                  ? 'Aset masuk servis tanpa kehilangan lokasi alokasi asal'
+                  : 'Aset masuk servis ke ruang pemeliharaan'}
               </p>
             </div>
           </div>
@@ -112,29 +110,24 @@ export const StartMaintenanceDialog = ({
               </span>
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Lokasi Alokasi Asal: <strong className="text-slate-700 dark:text-slate-300">{asalName}</strong>
+              {asset.lokasiAlokasiId ? 'Lokasi Alokasi Asal' : 'Lokasi Penempatan Asal'}: <strong className="text-slate-700 dark:text-slate-300">{asalName}</strong>
             </p>
           </div>
 
-          {/* Servis Location Selector */}
+          {/* Servis Location Automatic Display */}
           <div className="space-y-2">
             <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-              Pilih Ruang Servis / Perbaikan <span className="text-rose-500">*</span>
+              Tujuan Ruangan Pemeliharaan (Otomatis)
             </label>
-            <select
-              value={lokasiServisId}
-              onChange={(e) => setLokasiServisId(e.target.value)}
-              disabled={isSubmitting}
-              required
-              className="w-full h-12 px-3.5 rounded-2xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
-            >
-              <option value="">-- Pilih Lokasi Servis --</option>
-              {locations.map((loc) => (
-                <option key={loc.id} value={loc.id}>
-                  {loc.namaLokasi} {loc.deskripsi ? `(${loc.deskripsi})` : ''}
-                </option>
-              ))}
-            </select>
+            <div className="h-12 px-3.5 rounded-2xl border border-indigo-200 dark:border-indigo-800/60 bg-indigo-50/60 dark:bg-indigo-950/40 text-indigo-900 dark:text-indigo-100 flex items-center justify-between font-medium text-sm">
+              <span className="flex items-center gap-2">
+                <Wrench className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                <span>{targetServisName}</span>
+              </span>
+              <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-indigo-100 dark:bg-indigo-900/80 text-indigo-700 dark:text-indigo-300">
+                Ruang Servis Default
+              </span>
+            </div>
           </div>
 
           {/* Required Notes */}
@@ -157,7 +150,11 @@ export const StartMaintenanceDialog = ({
           <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-amber-800 dark:text-amber-200 text-xs space-y-1">
             <p className="font-bold">Konteks Domain Pemeliharaan:</p>
             <p>
-              Aset akan berubah status menjadi <strong className="font-mono">PEMELIHARAAN</strong> dan lokasi aktual berpindah ke <strong className="font-semibold">{selectedServisLoc?.namaLokasi || 'Ruang Servis'}</strong>. Namun <strong className="underline">lokasi alokasi asal ({asalName}) tidak dihapus</strong> dan tetap dicatat di sistem.
+              Aset akan berubah status menjadi <strong className="font-mono">PEMELIHARAAN</strong> dan lokasi aktual langsung berpindah ke <strong className="font-semibold">{targetServisName}</strong>. {
+                asset.lokasiAlokasiId
+                  ? `Namun lokasi alokasi asal (${asalName}) tidak dihapus dan tetap dicatat di sistem.`
+                  : 'Setelah servis selesai, aset dapat dikembalikan ke status operasional semula.'
+              }
             </p>
           </div>
 
@@ -178,7 +175,7 @@ export const StartMaintenanceDialog = ({
               size="md"
               icon={Wrench}
               isLoading={isSubmitting}
-              disabled={!lokasiServisId || !catatan.trim()}
+              disabled={!catatan.trim()}
             >
               {isSubmitting ? 'Memproses Servis...' : 'Masuk Servis'}
             </Button>

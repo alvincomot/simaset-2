@@ -45,21 +45,25 @@ async function main() {
   });
 
   //seed master data
-  await prisma.category.createMany({
-        data: [
-            { namaKategori: 'Elektronik', deskripsi: 'Laptop, Proyektor, PC' },
-            { namaKategori: 'Furnitur', deskripsi: 'Meja, Kursi, Lemari' }
-        ],
-        skipDuplicates: true
-    });
+  const categoriesData = [
+    { namaKategori: 'Elektronik', deskripsi: 'Laptop, Proyektor, PC' }
+  ];
+  for (const cat of categoriesData) {
+    const existing = await prisma.category.findFirst({ where: { namaKategori: cat.namaKategori } });
+    if (!existing) {
+      await prisma.category.create({ data: cat });
+    }
+  }
 
-  await prisma.location.createMany({
-      data: [
-          { namaLokasi: 'Lab Komputer 1', deskripsi: 'Gedung FTI Lantai 2' },
-          { namaLokasi: 'Ruang Dosen', deskripsi: 'Gedung FTI Lantai 1' }
-      ],
-      skipDuplicates: true
-  });
+  const locationsData = [
+    { namaLokasi: 'Ruang Servis', deskripsi: 'Pusat pemeliharaan dan perbaikan aset' }
+  ];
+  for (const loc of locationsData) {
+    const existing = await prisma.location.findFirst({ where: { namaLokasi: loc.namaLokasi } });
+    if (!existing) {
+      await prisma.location.create({ data: loc });
+    }
+  }
 
   console.log("Seeding selesai!");
   console.log("Super Admin: 01 / admin123");

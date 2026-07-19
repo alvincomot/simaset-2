@@ -262,8 +262,14 @@ export const AssetCatalogPage = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {filteredAllocatedCatalog.map((group) => {
-              const cats = group.categories || group.itemSummary || [];
-              const totalUnits = group.totalAllocated || cats.reduce((acc, c) => acc + (c.jumlahUnit || c.count || 0), 0);
+              const cats =
+                group.categories ||
+                group.itemSummary ||
+                (group.namaKategori ? [{ namaKategori: group.namaKategori, jumlahUnit: group.jumlahUnit }] : []);
+              const totalUnits =
+                group.totalAllocated ??
+                group.jumlahUnit ??
+                cats.reduce((acc, c) => acc + (c.jumlahUnit || c.count || 0), 0);
 
               return (
                 <div
@@ -336,7 +342,7 @@ export const AssetCatalogPage = () => {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
             {filteredAssets.map((asset) => {
-              const isAvailable = asset.statusKetersediaan === 'TERSEDIA';
+              const isAvailable = asset.statusKetersediaan === 'TERSEDIA' && asset.kondisi === 'BAIK';
 
               return (
                 <div
@@ -399,7 +405,13 @@ export const AssetCatalogPage = () => {
                       disabled={!isAvailable}
                       onClick={() => setSelectedBorrowAsset(asset)}
                       className="text-xs px-3"
-                      title={isAvailable ? 'Ajukan Peminjaman Aset Ini' : 'Aset sedang tidak tersedia'}
+                      title={
+                        isAvailable
+                          ? 'Ajukan Peminjaman Aset Ini'
+                          : asset.kondisi === 'RUSAK'
+                          ? 'Aset rusak dan tidak dapat dipinjam'
+                          : 'Aset sedang tidak tersedia'
+                      }
                     >
                       Ajukan Pinjam
                     </Button>

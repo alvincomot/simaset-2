@@ -111,7 +111,7 @@ export const BorrowingHistoryPage = () => {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-50 dark:bg-slate-900/60 border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">
-                  <th className="py-3.5 px-6">ID</th>
+                  <th className="py-3.5 px-6 w-16">No</th>
                   {isAdminOrStaff && <th className="py-3.5 px-6">Peminjam</th>}
                   <th className="py-3.5 px-6">Aset Inventaris</th>
                   <th className="py-3.5 px-6">Durasi Pinjam</th>
@@ -121,10 +121,10 @@ export const BorrowingHistoryPage = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-sm">
-                {filteredHistory.map((b) => (
+                {filteredHistory.map((b, index) => (
                   <tr key={b.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
-                    <td className="py-4 px-6 font-mono text-xs text-slate-500 dark:text-slate-400">
-                      #{b.id}
+                    <td className="py-4 px-6 font-mono text-xs font-bold text-slate-500 dark:text-slate-400">
+                      {index + 1}
                     </td>
                     {isAdminOrStaff && (
                       <td className="py-4 px-6 font-medium text-slate-900 dark:text-slate-100">

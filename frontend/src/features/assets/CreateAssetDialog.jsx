@@ -12,7 +12,6 @@ export const CreateAssetDialog = ({ isOpen, onClose, categories = [], locations 
   const [kodeAset, setKodeAset] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [locationId, setLocationId] = useState('');
-  const [statusKetersediaan, setStatusKetersediaan] = useState('TERSEDIA');
   const [kondisi, setKondisi] = useState('BAIK');
 
   const [isLoading, setIsLoading] = useState(false);
@@ -23,7 +22,6 @@ export const CreateAssetDialog = ({ isOpen, onClose, categories = [], locations 
       setError('');
       setNamaAset('');
       setKodeAset('');
-      setStatusKetersediaan('TERSEDIA');
       setKondisi('BAIK');
       if (categories.length > 0) setCategoryId(String(categories[0].id));
       if (locations.length > 0) setLocationId(String(locations[0].id));
@@ -51,7 +49,7 @@ export const CreateAssetDialog = ({ isOpen, onClose, categories = [], locations 
       await client.post('/assets', {
         namaAset: namaAset.trim(),
         kodeAset: kodeAset.trim(),
-        statusKetersediaan,
+        statusKetersediaan: 'TERSEDIA',
         kondisi,
         categoryId: Number(categoryId),
         locationId: Number(locationId),
@@ -169,35 +167,18 @@ export const CreateAssetDialog = ({ isOpen, onClose, categories = [], locations 
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-              Status Ketersediaan
-            </label>
-            <select
-              value={statusKetersediaan}
-              onChange={(e) => setStatusKetersediaan(e.target.value)}
-              className="mt-1 block w-full px-3 h-10 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
-            >
-              <option value="TERSEDIA">TERSEDIA</option>
-              <option value="DIPINJAM">DIPINJAM</option>
-              <option value="PEMELIHARAAN">PEMELIHARAAN</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-              Kondisi Fisik
-            </label>
-            <select
-              value={kondisi}
-              onChange={(e) => setKondisi(e.target.value)}
-              className="mt-1 block w-full px-3 h-10 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
-            >
-              <option value="BAIK">BAIK</option>
-              <option value="RUSAK">RUSAK</option>
-            </select>
-          </div>
+        <div className="pt-1">
+          <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+            Kondisi Fisik
+          </label>
+          <select
+            value={kondisi}
+            onChange={(e) => setKondisi(e.target.value)}
+            className="mt-1 block w-full px-3 h-10 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+          >
+            <option value="BAIK">Baik</option>
+            <option value="RUSAK">Rusak</option>
+          </select>
         </div>
       </form>
     </Modal>

@@ -199,13 +199,13 @@ export const relocateAssets = async (req, res) => {
 // E. Allocated Asset Maintenance Lifecycle - Masuk Servis
 export const startMaintenance = async (req, res) => {
   try {
-    const { assetId, lokasiServisId, catatan } = req.body;
+    let { assetId, lokasiServisId, catatan } = req.body;
     const userId = req.user.id;
 
-    if (!assetId || !lokasiServisId) {
+    if (!assetId) {
       return res.status(400).json({
         status: 'error',
-        message: 'assetId dan lokasiServisId (ruang servis) wajib diisi'
+        message: 'assetId wajib diisi'
       });
     }
 
@@ -216,11 +216,31 @@ export const startMaintenance = async (req, res) => {
       return res.status(404).json({ status: 'error', message: 'Aset tidak ditemukan' });
     }
 
-    const serviceLocation = await prisma.location.findUnique({
-      where: { id: parseInt(lokasiServisId) }
-    });
+    // Jika lokasiServisId tidak dikirim/null, otomatis cari atau buat "Ruang Servis / Perbaikan"
+    let serviceLocation = null;
+    if (lokasiServisId) {
+      serviceLocation = await prisma.location.findUnique({
+        where: { id: parseInt(lokasiServisId) }
+      });
+    }
     if (!serviceLocation) {
-      return res.status(404).json({ status: 'error', message: 'Lokasi servis tidak ditemukan' });
+      serviceLocation = await prisma.location.findFirst({
+        where: {
+          OR: [
+            { namaLokasi: { contains: 'Servis' } },
+            { namaLokasi: { contains: 'Perbaikan' } }
+          ]
+        }
+      });
+      if (!serviceLocation) {
+        serviceLocation = await prisma.location.create({
+          data: {
+            namaLokasi: 'Ruang Servis / Perbaikan',
+            deskripsi: 'Pusat pemeliharaan dan perbaikan aset'
+          }
+        });
+      }
+      lokasiServisId = serviceLocation.id;
     }
 
     if (asset.statusKetersediaan === 'DIPINJAM') {
@@ -298,14 +318,27 @@ export const finishMaintenance = async (req, res) => {
     if (kondisiHasil === 'BAIK') {
       // Jika hasil servis BAIK:
       // Kembali ke DIALOKASIKAN (dan lokasi aktual kembali ke lokasi alokasi) jika sebelumnya dialokasikan
-      // Atau kembali ke TERSEDIA jika aset umum
+      // Atau kembali ke TERSEDIA (dan lokasi aktual kembali ke lokasi asal sebelum servis) jika aset umum
       if (asset.lokasiAlokasiId) {
         newStatus = 'DIALOKASIKAN';
         newActualLocation = asset.lokasiAlokasiId;
         targetLocationHistory = asset.lokasiAlokasiId;
       } else {
         newStatus = 'TERSEDIA';
-        targetLocationHistory = asset.locationId;
+        const lastServisHistory = await prisma.allocation_history.findFirst({
+          where: {
+            assetId: asset.id,
+            jenisKejadian: 'MASUK_SERVIS',
+          },
+          orderBy: { createdAt: 'desc' },
+        });
+        if (lastServisHistory && lastServisHistory.lokasiAsalId) {
+          newActualLocation = lastServisHistory.lokasiAsalId;
+          targetLocationHistory = lastServisHistory.lokasiAsalId;
+        } else {
+          newActualLocation = asset.locationId;
+          targetLocationHistory = asset.locationId;
+        }
       }
     } else {
       // Jika hasil servis masih RUSAK:
@@ -328,7 +361,7 @@ export const finishMaintenance = async (req, res) => {
         data: {
           assetId: asset.id,
           userId: userId,
-          jenisKejadian: 'SELESAI_SERVIS',
+          jenisKejadian: kondisiHasil === 'BAIK' ? 'SELESAI_SERVIS' : 'MASUK_SERVIS',
           lokasiAsalId: asset.locationId,
           lokasiTujuanId: targetLocationHistory,
           catatan: `Kondisi hasil servis: ${kondisiHasil}${catatan ? ' - ' + catatan : ''}`
@@ -445,35 +478,51 @@ export const getAllocatedCatalogUser = async (req, res) => {
         categoryId: true,
         lokasiAlokasiId: true,
         category: { select: { namaKategori: true } },
-        lokasiAlokasi: { select: { namaLokasi: true } }
-      }
+        lokasiAlokasi: { select: { namaLokasi: true, deskripsi: true } },
+      },
     });
 
-    // Agregasi / pengelompokan berdasarkan categoryId + lokasiAlokasiId
-    const groupMap = {};
+    const locationMap = {};
     for (const item of allocatedAssets) {
       if (!item.lokasiAlokasiId) continue;
-      const key = `${item.categoryId}_${item.lokasiAlokasiId}`;
-      if (!groupMap[key]) {
-        groupMap[key] = {
-          categoryId: item.categoryId,
-          namaKategori: item.category ? item.category.namaKategori : 'Tanpa Kategori',
-          lokasiId: item.lokasiAlokasiId,
-          namaLokasi: item.lokasiAlokasi ? item.lokasiAlokasi.namaLokasi : 'Tanpa Lokasi',
-          jumlahUnit: 0,
-          keterangan: 'Tidak tersedia untuk peminjaman umum'
+      const locId = item.lokasiAlokasiId;
+      if (!locationMap[locId]) {
+        locationMap[locId] = {
+          id: locId,
+          namaLokasi: item.lokasiAlokasi?.namaLokasi || 'Tanpa Lokasi',
+          deskripsi: item.lokasiAlokasi?.deskripsi || 'Fasilitas ruangan perkuliahan / laboratorium kampus.',
+          totalAllocated: 0,
+          categoriesMap: {},
         };
       }
-      groupMap[key].jumlahUnit += 1;
+      locationMap[locId].totalAllocated += 1;
+
+      const catName = item.category?.namaKategori || 'Tanpa Kategori';
+      if (!locationMap[locId].categoriesMap[catName]) {
+        locationMap[locId].categoriesMap[catName] = {
+          namaKategori: catName,
+          jumlahUnit: 0,
+        };
+      }
+      locationMap[locId].categoriesMap[catName].jumlahUnit += 1;
     }
 
-    const aggregatedList = Object.values(groupMap).sort((a, b) => 
-      a.namaKategori.localeCompare(b.namaKategori) || a.namaLokasi.localeCompare(b.namaLokasi)
-    );
+    const aggregatedList = Object.values(locationMap)
+      .map((loc) => ({
+        id: loc.id,
+        namaLokasi: loc.namaLokasi,
+        deskripsi: loc.deskripsi,
+        totalAllocated: loc.totalAllocated,
+        categories: Object.values(loc.categoriesMap).sort((a, b) =>
+          a.namaKategori.localeCompare(b.namaKategori)
+        ),
+        keterangan: 'Tidak tersedia untuk peminjaman umum',
+      }))
+      .sort((a, b) => a.namaLokasi.localeCompare(b.namaLokasi));
 
     res.status(200).json({
       status: 'success',
-      data: aggregatedList
+      data: aggregatedList,
     });
   } catch (error) {
     console.error('Error getAllocatedCatalogUser:', error);

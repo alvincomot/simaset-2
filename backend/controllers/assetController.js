@@ -5,11 +5,17 @@ export const getAllAssets = async (req, res) => {
   try {
     const assets = await prisma.asset.findMany({
       include: {
-        category: { select: { namaKategori: true }},
-        location: { select: { namaLokasi: true }},
-        lokasiAlokasi: { select: { namaLokasi: true }}
+        category: { select: { namaKategori: true } },
+        location: { select: { namaLokasi: true } },
+        lokasiAlokasi: { select: { namaLokasi: true } },
+        allocationHistories: {
+          where: { jenisKejadian: 'MASUK_SERVIS' },
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+          include: { lokasiAsal: { select: { namaLokasi: true } } },
+        },
       },
-      orderBy: {createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' },
     });
 
     res.status(200).json({

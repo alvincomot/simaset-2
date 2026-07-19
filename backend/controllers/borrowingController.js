@@ -15,6 +15,10 @@ export const requestBorrowing = async (req, res) =>{
       return res.status(404).json({status: 'error', message: 'Aset tidak ditemukan'})
     }
 
+    if (asset.kondisi === 'RUSAK') {
+      return res.status(400).json({ status: 'error', message: 'Aset dalam kondisi rusak dan tidak dapat dipinjam' });
+    }
+
     if (asset.statusKetersediaan === 'DIALOKASIKAN') {
       return res.status(400).json({ status: 'error', message: 'Aset yang dialokasikan tidak dapat diajukan untuk peminjaman umum' });
     }
@@ -62,6 +66,13 @@ export const approveBorrowing = async (req, res) => {
       return res.status(400).json({
         status: 'error',
         message: 'Data peminjaman tidak valid atau sudah diproses'
+      });
+    }
+
+    if (borrowing.asset.kondisi === 'RUSAK') {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Aset dalam kondisi rusak dan tidak dapat disetujui untuk peminjaman'
       });
     }
 
