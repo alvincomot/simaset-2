@@ -167,8 +167,32 @@ export const CategoriesPage = () => {
             onAction={openCreate}
           />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+          <>
+            {/* Mobile Cards View */}
+            <div className="md:hidden flex flex-col divide-y divide-slate-100 dark:divide-slate-800/60">
+              {filteredCategories.map((cat, index) => (
+                <div key={cat.id} className="flex items-center justify-between gap-4 p-4 hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <span className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-xs font-bold text-slate-500 dark:text-slate-400 shrink-0">
+                      {index + 1}
+                    </span>
+                    <span className="font-bold text-slate-900 dark:text-slate-100">{cat.namaKategori}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <button type="button" onClick={() => openEdit(cat)} className="p-2 rounded-lg text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 transition-colors" title="Edit kategori">
+                      <Edit2 className="w-4 h-4" />
+                    </button>
+                    <button type="button" onClick={() => { setDeleteError(''); setDeletingCategory(cat); }} className="p-2 rounded-lg text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/60 hover:bg-rose-100 dark:hover:bg-rose-900/60 transition-colors" title="Hapus kategori">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop Table View */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-50 dark:bg-slate-900/60 border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">
                   <th className="py-3.5 px-6 w-16">No</th>
@@ -210,7 +234,8 @@ export const CategoriesPage = () => {
                 ))}
               </tbody>
             </table>
-          </div>
+            </div>
+          </>
         )}
       </div>
 
@@ -223,7 +248,7 @@ export const CategoriesPage = () => {
         closeOnBackdrop={!isSubmitting}
         footer={
           <>
-            <Button variant="secondary" onClick={() => setIsModalOpen(false)} disabled={isSubmitting}>
+            <Button variant="destructive" onClick={() => setIsModalOpen(false)} disabled={isSubmitting}>
               Batal
             </Button>
             <Button variant="primary" onClick={handleFormSubmit} isLoading={isSubmitting}>
