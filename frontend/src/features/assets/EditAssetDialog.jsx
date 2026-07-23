@@ -70,7 +70,7 @@ export const EditAssetDialog = ({ isOpen, onClose, asset, categories = [], locat
       closeOnBackdrop={!isLoading}
       footer={
         <>
-          <Button variant="secondary" onClick={onClose} disabled={isLoading}>
+          <Button variant="destructive" onClick={onClose} disabled={isLoading}>
             Batal
           </Button>
           <Button variant="primary" onClick={handleSubmit} isLoading={isLoading}>
@@ -96,7 +96,6 @@ export const EditAssetDialog = ({ isOpen, onClose, asset, categories = [], locat
             required
             value={namaAset}
             onChange={(e) => setNamaAset(e.target.value)}
-            placeholder="Contoh: Proyektor Epson EB-X06"
             className="mt-1 block w-full px-3.5 h-10 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
           />
         </div>
