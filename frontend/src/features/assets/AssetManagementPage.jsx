@@ -269,8 +269,113 @@ export const AssetManagementPage = () => {
             onAction={() => setIsCreateOpen(true)}
           />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+          <>
+            {/* Mobile Cards View */}
+            <div className="md:hidden flex flex-col divide-y divide-slate-100 dark:divide-slate-800/60">
+              {(features.assetAllocation || features.assetRelocation) && filteredAssets.length > 0 && (
+                <div className="flex items-center gap-3 p-4 bg-slate-50/80 dark:bg-slate-900/80 border-b border-slate-100 dark:border-slate-800/60 sticky top-0 z-10 backdrop-blur-md">
+                  <input
+                    type="checkbox"
+                    checked={
+                      filteredAssets.filter(
+                        (a) =>
+                          a.statusKetersediaan !== 'DIPINJAM' && a.statusKetersediaan !== 'PEMELIHARAAN'
+                      ).length > 0 &&
+                      selectedAssetIds.length ===
+                        filteredAssets.filter(
+                          (a) =>
+                            a.statusKetersediaan !== 'DIPINJAM' && a.statusKetersediaan !== 'PEMELIHARAAN'
+                        ).length
+                    }
+                    onChange={handleSelectAll}
+                    className="rounded border-slate-300 dark:border-slate-700 text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer"
+                  />
+                  <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                    Pilih Semua ({filteredAssets.filter((a) => a.statusKetersediaan !== 'DIPINJAM' && a.statusKetersediaan !== 'PEMELIHARAAN').length} Aset)
+                  </span>
+                </div>
+              )}
+              {filteredAssets.map((asset) => {
+                const isEligibleSelect =
+                  asset.statusKetersediaan !== 'DIPINJAM' &&
+                  asset.statusKetersediaan !== 'PEMELIHARAAN';
+
+                return (
+                  <div key={asset.id} className={`flex flex-col gap-4 p-4 hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors ${
+                    selectedAssetIds.includes(asset.id) ? 'bg-indigo-50/40 dark:bg-indigo-950/30' : ''
+                  }`}>
+                    {/* Header */}
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-start gap-3">
+                        {(features.assetAllocation || features.assetRelocation) && (
+                          <input
+                            type="checkbox"
+                            checked={selectedAssetIds.includes(asset.id)}
+                            onChange={() => handleToggleSelect(asset.id)}
+                            disabled={!isEligibleSelect}
+                            className="mt-1 rounded border-slate-300 dark:border-slate-700 text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                          />
+                        )}
+                        <div>
+                          <h4 className="font-bold text-slate-900 dark:text-slate-100 leading-tight">{asset.namaAset}</h4>
+                          <p className="font-mono text-xs text-slate-500 dark:text-slate-400 mt-1">{asset.kodeAset}</p>
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-end gap-1.5 shrink-0">
+                        <StatusBadge status={asset.statusKetersediaan} />
+                        <ConditionBadge condition={asset.kondisi} />
+                      </div>
+                    </div>
+
+                    {/* Details */}
+                    <div className="grid grid-cols-2 gap-3 text-xs bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-100 dark:border-slate-800/60">
+                      <div>
+                        <span className="text-slate-500 dark:text-slate-400 font-semibold block mb-0.5">Kategori</span>
+                        <span className="font-medium text-slate-700 dark:text-slate-300">{asset.category?.namaKategori || 'Umum'}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-500 dark:text-slate-400 font-semibold block mb-0.5">Lokasi</span>
+                        <span className="font-medium text-slate-700 dark:text-slate-300">{asset.location?.namaLokasi || 'Gudang'}</span>
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex items-center justify-end gap-2 pt-1">
+                      {features.assetAllocation && asset.statusKetersediaan === 'TERSEDIA' && (
+                        <button type="button" onClick={() => handleOpenAllocate([asset])} className="p-2 rounded-lg text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/60 hover:bg-purple-100 transition-colors" title="Alokasikan Aset">
+                          <PackagePlus className="w-4 h-4" />
+                        </button>
+                      )}
+                      {features.assetRelocation && asset.statusKetersediaan === 'DIALOKASIKAN' && (
+                        <button type="button" onClick={() => handleOpenRelocate([asset])} className="p-2 rounded-lg text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 transition-colors" title="Relokasi Aset">
+                          <ArrowRightLeft className="w-4 h-4" />
+                        </button>
+                      )}
+                      {features.allocationMaintenance && (asset.statusKetersediaan === 'DIALOKASIKAN' || asset.statusKetersediaan === 'TERSEDIA') && (
+                        <button type="button" onClick={() => setMaintenanceStartAsset(asset)} className="p-2 rounded-lg text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 transition-colors" title="Pindahkan ke Pemeliharaan">
+                          <Wrench className="w-4 h-4" />
+                        </button>
+                      )}
+                      {features.allocationMaintenance && asset.statusKetersediaan === 'PEMELIHARAAN' && (
+                        <button type="button" onClick={() => setMaintenanceFinishAsset(asset)} className="p-2 rounded-lg text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 transition-colors" title="Selesaikan Servis & Kembalikan">
+                          <CheckCircle2 className="w-4 h-4" />
+                        </button>
+                      )}
+                      <button type="button" onClick={() => setEditingAsset(asset)} className="p-2 rounded-lg text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors" title="Edit aset">
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                      <button type="button" onClick={() => { setDeleteError(''); setDeletingAsset(asset); }} className="p-2 rounded-lg text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/60 hover:bg-rose-100 transition-colors" title="Hapus aset">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Desktop Table View */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-50 dark:bg-slate-900/60 border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">
                   {(features.assetAllocation || features.assetRelocation) && (
@@ -432,40 +537,46 @@ export const AssetManagementPage = () => {
                 })}
               </tbody>
             </table>
-          </div>
+            </div>
+          </>
         )}
 
         {/* Sticky Bulk Action Bar */}
         {selectedAssetIds.length > 0 && (
-          <div className="sticky bottom-0 inset-x-0 bg-slate-50 dark:bg-slate-900 border-slate-300 dark:border-slate-700 backdrop-blur-md text-white px-6 py-4 border-t flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-in slide-in-from-bottom duration-200 z-20">
-            <div className="flex items-center gap-3">
-              <span className="px-3 py-1 rounded-xl bg-indigo-600 text-white font-bold text-sm">
-                {selectedAssetIds.length} Terpilih
-              </span>
-              <span className="text-xs text-slate-500 dark:text-slate-400">
-                Pilih aksi alokasi atau relokasi untuk aset dalam batch.
-              </span>
-            </div>
-            <div className="flex items-center gap-3">
+          <div className="sticky bottom-0 inset-x-0 bg-white/95 dark:bg-slate-900/95 border-t border-slate-200 dark:border-slate-800 backdrop-blur-xl px-4 py-3 sm:px-6 sm:py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 animate-in slide-in-from-bottom duration-200 z-20 shadow-[0_-4px_20px_-10px_rgba(0,0,0,0.1)]">
+            <div className="flex flex-row items-center justify-between sm:justify-start gap-3 w-full sm:w-auto">
+              <div className="flex items-center gap-2.5">
+                <span className="px-2.5 py-1 rounded-xl bg-indigo-600 text-white font-bold text-sm leading-none flex items-center justify-center min-w-[2rem]">
+                  {selectedAssetIds.length}
+                </span>
+                <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                  Aset Terpilih
+                </span>
+              </div>
               <Button
-                variant="secondary"
+                variant="destructive"
                 size="sm"
                 onClick={() => setSelectedAssetIds([])}
-                className=""
+                className="px-3"
               >
-                Batal Pilih
+                Batal
               </Button>
+            </div>
+            
+            <div className="flex flex-row items-center gap-2 sm:gap-3 w-full sm:w-auto">
               {features.assetAllocation && (
                 <Button
                   variant="primary"
                   size="sm"
                   icon={PackagePlus}
+                  className="flex-1 sm:flex-none justify-center"
                   onClick={() => {
                     const targets = filteredAssets.filter((a) => selectedAssetIds.includes(a.id));
                     handleOpenAllocate(targets);
                   }}
                 >
-                  Alokasikan Aset Terpilih
+                  <span className="hidden sm:inline">Alokasikan Aset Terpilih</span>
+                  <span className="sm:hidden">Alokasi</span>
                 </Button>
               )}
               {features.assetRelocation && (
@@ -473,12 +584,14 @@ export const AssetManagementPage = () => {
                   variant="secondary"
                   size="sm"
                   icon={ArrowRightLeft}
+                  className="flex-1 sm:flex-none justify-center"
                   onClick={() => {
                     const targets = filteredAssets.filter((a) => selectedAssetIds.includes(a.id));
                     handleOpenRelocate(targets);
                   }}
                 >
-                  Relokasi Aset Terpilih
+                  <span className="hidden sm:inline">Relokasi Aset Terpilih</span>
+                  <span className="sm:hidden">Relokasi</span>
                 </Button>
               )}
             </div>
