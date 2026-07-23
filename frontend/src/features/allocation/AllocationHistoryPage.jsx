@@ -125,8 +125,74 @@ export const AllocationHistoryPage = () => {
             message="Belum tercatat aktivitas alokasi, relokasi, atau servis yang sesuai filter pencarian Anda."
           />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+          <>
+            {/* Mobile Cards View */}
+            <div className="md:hidden flex flex-col divide-y divide-slate-100 dark:divide-slate-800/60">
+              {filteredHistory.map((item) => {
+                const infoKejadian = jenisKejadianMap[item.jenisKejadian] || {
+                  label: item.jenisKejadian,
+                  badgeClass: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
+                };
+                const tgl = new Date(item.createdAt || item.waktu || 0);
+
+                return (
+                  <div key={item.id} className="flex flex-col gap-3 p-4 hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="font-bold text-slate-900 dark:text-slate-100">{item.asset?.namaAset || 'Aset #' + item.assetId}</p>
+                        <p className="font-mono text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{item.asset?.kodeAset || '-'}</p>
+                      </div>
+                      <div className="flex flex-col items-end gap-1.5 shrink-0">
+                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wide uppercase ${infoKejadian.badgeClass}`}>
+                          {infoKejadian.label}
+                        </span>
+                        <div className="text-right">
+                          <p className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                            {tgl.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}
+                          </p>
+                          <p className="text-[10px] text-slate-500 font-mono">
+                            {tgl.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-3 text-xs border border-slate-100 dark:border-slate-800/60">
+                      <div className="grid grid-cols-2 gap-3 mb-2 pb-2 border-b border-slate-200 dark:border-slate-700/60">
+                        <div>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Pelaku</p>
+                          <p className="font-semibold text-slate-700 dark:text-slate-300">{item.user?.namaLengkap || 'Staff'}</p>
+                          <p className="text-[10px] text-slate-500 dark:text-slate-500">{item.user?.role || item.user?.nim || '-'}</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Lokasi</p>
+                          {item.lokasiAsal && item.lokasiTujuan ? (
+                            <div className="flex flex-col gap-0.5 text-[11px]">
+                              <span className="font-medium text-slate-500 line-through decoration-slate-400">{item.lokasiAsal.namaLokasi}</span>
+                              <span className="font-bold text-slate-900 dark:text-slate-100">{item.lokasiTujuan.namaLokasi}</span>
+                            </div>
+                          ) : item.lokasiTujuan ? (
+                            <span className="font-bold text-slate-900 dark:text-slate-100">{item.lokasiTujuan.namaLokasi}</span>
+                          ) : item.lokasiAsal ? (
+                            <span className="font-medium text-slate-500 line-through decoration-slate-400">{item.lokasiAsal.namaLokasi}</span>
+                          ) : (
+                            <span className="text-slate-400 italic">-</span>
+                          )}
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Catatan</p>
+                        <p className="text-slate-600 dark:text-slate-400 line-clamp-2">{item.catatan || '-'}</p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Desktop Table View */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-50 dark:bg-slate-900/60 border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">
                   <th className="py-3.5 px-6">Waktu Kejadian</th>
@@ -225,7 +291,8 @@ export const AllocationHistoryPage = () => {
                 })}
               </tbody>
             </table>
-          </div>
+            </div>
+          </>
         )}
       </div>
     </div>
