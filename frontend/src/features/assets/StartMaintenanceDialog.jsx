@@ -162,7 +162,7 @@ export const StartMaintenanceDialog = ({
           <div className="pt-2 flex items-center justify-end gap-3 border-t border-slate-200 dark:border-slate-800">
             <Button
               type="button"
-              variant="ghost"
+              variant="destructive"
               size="md"
               onClick={onClose}
               disabled={isSubmitting}
