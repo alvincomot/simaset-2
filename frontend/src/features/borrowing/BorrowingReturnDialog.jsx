@@ -65,7 +65,7 @@ export const BorrowingReturnDialog = ({ isOpen, onClose, borrowing, onSuccess })
       closeOnBackdrop={!isLoading}
       footer={
         <>
-          <Button variant="secondary" onClick={onClose} disabled={isLoading}>
+          <Button variant="destructive" onClick={onClose} disabled={isLoading}>
             Batal
           </Button>
           <Button variant="primary" onClick={handleSubmit} isLoading={isLoading}>
