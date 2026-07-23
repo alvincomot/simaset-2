@@ -51,8 +51,8 @@ export const LocationSummaryPage = () => {
             <Layers className="w-7 h-7 text-indigo-600 dark:text-indigo-400" />
             <span>Ringkasan Aset per Lokasi</span>
           </h2>
-          <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-            Perbandingan aset yang secara fisik berada di ruangan (Lokasi Aktual) versus fasilitas yang dialokasikan (Lokasi Alokasi).
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+            Pantauan distribusi dan ketersediaan aset di setiap ruangan
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -95,8 +95,84 @@ export const LocationSummaryPage = () => {
             message="Belum ada data master lokasi atau ruangan yang cocok dengan pencarian Anda."
           />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+          <>
+            {/* Mobile Cards View */}
+            <div className="md:hidden flex flex-col divide-y divide-slate-100 dark:divide-slate-800/60">
+              {filteredSummaries.map((loc) => {
+                const kondisi = loc.kondisi || { baik: 0, rusak: 0 };
+                const status = loc.statusKetersediaan || { tersedia: 0, dipinjam: 0, pemeliharaan: 0, dialokasikan: 0 };
+
+                return (
+                  <div key={loc.id} className="flex flex-col gap-4 p-4 hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+                        <MapPin className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <p className="font-bold text-slate-900 dark:text-slate-100">{loc.namaLokasi}</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">ID Lokasi: #{loc.id}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-100 dark:border-slate-800/60 text-center flex flex-col justify-center">
+                        <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Aset Aktual</p>
+                        <div>
+                          <span className="inline-flex items-center justify-center min-w-[2.5rem] px-2 py-0.5 rounded-lg bg-slate-200/60 dark:bg-slate-700 font-bold text-slate-900 dark:text-slate-100 text-base">
+                            {loc.totalActualAssets || 0}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="bg-purple-50/50 dark:bg-purple-900/20 p-3 rounded-xl border border-purple-100 dark:border-purple-800/60 text-center flex flex-col justify-center">
+                        <p className="text-[10px] font-bold text-purple-600/80 dark:text-purple-400/80 uppercase tracking-wider mb-1.5">Aset Dialokasikan</p>
+                        <div>
+                          <span className="inline-flex items-center justify-center min-w-[2.5rem] px-2 py-0.5 rounded-lg bg-purple-100 dark:bg-purple-900/60 font-bold text-purple-700 dark:text-purple-300 text-base">
+                            {loc.totalAllocatedAssets || 0}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3 text-xs">
+                      <div className="space-y-1.5 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800/60">
+                        <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2.5">Kondisi Fisik</p>
+                        <div className="flex items-center justify-between">
+                          <span className="text-teal-700 dark:text-teal-400 font-semibold">BAIK:</span>
+                          <span className="font-mono font-bold">{kondisi.baik || 0}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-rose-700 dark:text-rose-400 font-semibold">RUSAK:</span>
+                          <span className="font-mono font-bold">{kondisi.rusak || 0}</span>
+                        </div>
+                      </div>
+                      <div className="space-y-1.5 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800/60 font-mono">
+                        <p className="font-sans text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2.5">Distribusi Status</p>
+                        <div className="flex items-center justify-between">
+                          <span className="text-emerald-600 dark:text-emerald-400">Tersedia:</span>
+                          <strong>{status.tersedia || 0}</strong>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-purple-600 dark:text-purple-400">Alokasi:</span>
+                          <strong>{status.dialokasikan || 0}</strong>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-blue-600 dark:text-blue-400">Dipinjam:</span>
+                          <strong>{status.dipinjam || 0}</strong>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-amber-600 dark:text-amber-400">Servis:</span>
+                          <strong>{status.pemeliharaan || 0}</strong>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Desktop Table View */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-50 dark:bg-slate-900/60 border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">
                   <th className="py-3.5 px-6">Nama Lokasi / Ruangan</th>
@@ -162,7 +238,7 @@ export const LocationSummaryPage = () => {
                             <strong>{status.dipinjam || 0}</strong>
                           </div>
                           <div>
-                            <span className="text-amber-600 dark:text-amber-400">Servis: </span>
+                            <span className="text-amber-600 dark:text-amber-400">Servis : </span>
                             <strong>{status.pemeliharaan || 0}</strong>
                           </div>
                         </div>
@@ -172,7 +248,8 @@ export const LocationSummaryPage = () => {
                 })}
               </tbody>
             </table>
-          </div>
+            </div>
+          </>
         )}
       </div>
     </div>
