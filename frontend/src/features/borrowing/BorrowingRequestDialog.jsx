@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Package, AlertCircle } from 'lucide-react';
+import { Calendar, Package, AlertCircle, MapPin } from 'lucide-react';
 import client from '../../lib/api/client';
 import Modal from '../../components/ui/Modal';
 import Button from '../../components/ui/Button';
@@ -8,21 +8,37 @@ import { useToast } from '../../components/feedback/ToastProvider';
 export const BorrowingRequestDialog = ({ isOpen, onClose, asset, onSuccess }) => {
   const toast = useToast();
   const [tenggatWaktu, setTenggatWaktu] = useState('');
+  const [lokasiPenggunaanId, setLokasiPenggunaanId] = useState('');
+  const [locations, setLocations] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Set default date to 3 days from today when opened
   useEffect(() => {
     if (isOpen) {
       setError('');
+      setLokasiPenggunaanId('');
       const d = new Date();
       d.setDate(d.getDate() + 3);
       const yyyy = d.getFullYear();
       const mm = String(d.getMonth() + 1).padStart(2, '0');
       const dd = String(d.getDate()).padStart(2, '0');
       setTenggatWaktu(`${yyyy}-${mm}-${dd}`);
+
+      // Fetch locations for dropdown
+      client
+        .get('/masters/locations')
+        .then((res) => {
+          setLocations(res.data || res || []);
+        })
+        .catch(() => setLocations([]));
     }
   }, [isOpen]);
+
+  const usageLocations = locations.filter(
+    (l) =>
+      !l.namaLokasi?.toLowerCase().includes('gudang') &&
+      !l.namaLokasi?.toLowerCase().includes('servis')
+  );
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -34,6 +50,10 @@ export const BorrowingRequestDialog = ({ isOpen, onClose, asset, onSuccess }) =>
     }
     if (!tenggatWaktu) {
       setError('Tenggat waktu pengembalian wajib dipilih.');
+      return;
+    }
+    if (!lokasiPenggunaanId) {
+      setError('Ruangan / Lokasi penggunaan wajib dipilih.');
       return;
     }
 
@@ -52,6 +72,7 @@ export const BorrowingRequestDialog = ({ isOpen, onClose, asset, onSuccess }) =>
       await client.post('/borrowing/request', {
         assetId: Number(asset.id),
         tenggatWaktu,
+        lokasiPenggunaanId: Number(lokasiPenggunaanId),
       });
 
       toast.success(
@@ -76,7 +97,7 @@ export const BorrowingRequestDialog = ({ isOpen, onClose, asset, onSuccess }) =>
       closeOnBackdrop={!isLoading}
       footer={
         <>
-          <Button variant="secondary" onClick={onClose} disabled={isLoading}>
+          <Button variant="destructive" onClick={onClose} disabled={isLoading}>
             Batal
           </Button>
           <Button variant="primary" onClick={handleSubmit} isLoading={isLoading}>
@@ -111,6 +132,35 @@ export const BorrowingRequestDialog = ({ isOpen, onClose, asset, onSuccess }) =>
           </div>
         </div>
 
+        {/* Lokasi Penggunaan Input */}
+        <div>
+          <label htmlFor="lokasiPenggunaanId" className="block text-sm font-semibold text-slate-700 dark:text-slate-300">
+            Pilih Ruangan / Lokasi Penggunaan <span className="text-rose-500">*</span>
+          </label>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            Tentukan di ruangan mana fisik aset ini akan dipergunakan selama peminjaman.
+          </p>
+          <div className="mt-2 relative rounded-xl shadow-sm">
+            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+              <MapPin className="w-5 h-5" />
+            </div>
+            <select
+              id="lokasiPenggunaanId"
+              required
+              value={lokasiPenggunaanId}
+              onChange={(e) => setLokasiPenggunaanId(e.target.value)}
+              className="block w-full pl-11 pr-4 h-11 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm transition-all"
+            >
+              <option value="">-- Pilih Ruangan / Lokasi --</option>
+              {usageLocations.map((loc) => (
+                <option key={loc.id} value={loc.id}>
+                  {loc.namaLokasi} {loc.deskripsi ? `(${loc.deskripsi})` : ''}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
         {/* Tenggat Waktu Input */}
         <div>
           <label htmlFor="tenggatWaktu" className="block text-sm font-semibold text-slate-700 dark:text-slate-300">
@@ -136,7 +186,7 @@ export const BorrowingRequestDialog = ({ isOpen, onClose, asset, onSuccess }) =>
 
         <div className="p-3 bg-indigo-50/60 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/40 rounded-xl">
           <p className="text-xs text-indigo-900 dark:text-indigo-200 leading-relaxed">
-            <strong className="font-semibold">Catatan Sistem:</strong> Pengajuan ini akan berstatus <span className="font-mono bg-indigo-100 dark:bg-indigo-900/60 px-1.5 py-0.5 rounded text-[11px] font-bold">PENDING</span> dan aset belum dapat diambil sebelum disetujui oleh admin atau staf yang bertugas.
+            <strong className="font-semibold">Catatan Sistem:</strong> Pengajuan ini akan berstatus <span className="font-mono bg-indigo-100 dark:bg-indigo-900/60 px-1.5 py-0.5 rounded text-[11px] font-bold">PENDING</span> dan aset fisik akan dipindahkan lokasinya ke ruangan pemakaian begitu disetujui admin.
           </p>
         </div>
       </form>
