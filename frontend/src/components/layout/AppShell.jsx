@@ -70,7 +70,7 @@ export const AppShell = () => {
   };
 
   return (
-    <div className="min-h-screen w-full overflow-x-hidden bg-slate-50 dark:bg-slate-950 flex flex-col text-slate-900 dark:text-slate-50 transition-colors duration-200">
+    <div className="min-h-screen w-full min-w-[320px] overflow-x-hidden bg-slate-50 dark:bg-slate-950 flex flex-col text-slate-900 dark:text-slate-50 transition-colors duration-200">
       {isAdminOrStaff ? (
         /* ========================================================
          * ADMIN / STAFF LAYOUT (Sidebar + TopBar)
