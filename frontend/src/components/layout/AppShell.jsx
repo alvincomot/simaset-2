@@ -35,6 +35,7 @@ export const AppShell = () => {
   }, [location.pathname, location.search]);
 
   const isAdminOrStaff = role === 'SUPER_ADMIN' || role === 'STAFF';
+  const sidebarCollapsed = isCollapsed && !isMobileOpen;
 
   const adminNavGroups = React.useMemo(() => {
     return ADMIN_STAFF_NAV_GROUPS.map((g) => {
@@ -69,12 +70,12 @@ export const AppShell = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col text-slate-900 dark:text-slate-50 transition-colors duration-200">
+    <div className="min-h-screen w-full overflow-x-hidden bg-slate-50 dark:bg-slate-950 flex flex-col text-slate-900 dark:text-slate-50 transition-colors duration-200">
       {isAdminOrStaff ? (
         /* ========================================================
          * ADMIN / STAFF LAYOUT (Sidebar + TopBar)
          * ======================================================== */
-        <div className="flex flex-1 min-h-screen">
+        <div className="flex flex-1 min-w-0 w-full min-h-screen">
           {/* Mobile Backdrop */}
           {isMobileOpen && (
             <div
@@ -86,8 +87,8 @@ export const AppShell = () => {
           {/* Sidebar */}
           <aside
             className={`fixed inset-y-0 left-0 z-50 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col transition-all duration-240 ease-in-out lg:translate-x-0 ${
-              isMobileOpen ? 'translate-x-0 w-66' : '-translate-x-full lg:translate-x-0'
-            } ${isCollapsed ? 'lg:w-20' : 'lg:w-66'}`}
+              isMobileOpen ? 'translate-x-0 w-64' : '-translate-x-full lg:translate-x-0'
+            } ${sidebarCollapsed ? 'lg:w-20' : 'lg:w-64'}`}
           >
             {/* Brand Header */}
             <div className="h-18 px-5 flex items-center justify-between border-b border-slate-200 dark:border-slate-800 shrink-0">
@@ -95,7 +96,7 @@ export const AppShell = () => {
                 <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center shrink-0 shadow-sm shadow-indigo-600/30">
                   <LucideIcons.Box className="w-6 h-6 text-white" />
                 </div>
-                {!isCollapsed && (
+                {!sidebarCollapsed && (
                   <span className="text-lg font-bold tracking-tight text-slate-900 dark:text-white select-none whitespace-nowrap">
                     SIMASET
                   </span>
@@ -114,7 +115,7 @@ export const AppShell = () => {
             <nav className="flex-grow p-4 space-y-6 overflow-y-auto" aria-label="Navigasi utama">
               {adminNavGroups.map((group, gIdx) => (
                 <div key={gIdx} className="space-y-1">
-                  {!isCollapsed && (
+                  {!sidebarCollapsed && (
                     <p className="px-3 pb-1 text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider select-none">
                       {group.title}
                     </p>
@@ -134,15 +135,15 @@ export const AppShell = () => {
                       <NavLink
                         key={idx}
                         to={item.path}
-                        title={isCollapsed ? item.label : undefined}
+                        title={sidebarCollapsed ? item.label : undefined}
                         className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 select-none ${
                           isActive
                             ? 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-semibold'
                             : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-200'
-                        } ${isCollapsed ? 'justify-center px-0' : ''}`}
+                        } ${sidebarCollapsed ? 'justify-center px-0' : ''}`}
                       >
                         {getIcon(item.icon)}
-                        {!isCollapsed && <span className="truncate">{item.label}</span>}
+                        {!sidebarCollapsed && <span className="truncate">{item.label}</span>}
                       </NavLink>
                     );
                   })}
@@ -173,8 +174,8 @@ export const AppShell = () => {
 
           {/* Main Area */}
           <div
-            className={`flex-1 flex flex-col min-h-screen transition-all duration-240 ease-in-out ${
-              isCollapsed ? 'lg:pl-20' : 'lg:pl-66'
+            className={`flex-1 min-w-0 flex flex-col min-h-screen transition-all duration-240 ease-in-out ${
+              isCollapsed ? 'lg:pl-20' : 'lg:pl-64'
             }`}
           >
             {/* Top Bar */}
@@ -189,8 +190,8 @@ export const AppShell = () => {
                   <LucideIcons.Menu className="w-6 h-6" />
                 </button>
                 <div className="hidden sm:block">
-                  <h1 className="text-base font-bold text-slate-900 dark:text-slate-50 capitalize">
-                    {role === 'SUPER_ADMIN' ? 'Super Admin Workspace' : 'Staff Workspace'}
+                  <h1 className="text-base font-bold text-slate-900 dark:text-slate-50 uppercase">
+                    {role === 'SUPER_ADMIN' ? 'SUPER ADMIN AREA' : 'STAFF AREA'}
                   </h1>
                 </div>
               </div>
@@ -271,7 +272,7 @@ export const AppShell = () => {
             </header>
 
             {/* Page Content */}
-            <main className="flex-1 max-w-[1440px] w-full mx-auto p-4 sm:p-6 lg:p-8">
+            <main className="flex-1 min-w-0 max-w-[1440px] w-full mx-auto p-4 sm:p-6 lg:p-8">
               <Outlet />
             </main>
           </div>
@@ -280,7 +281,7 @@ export const AppShell = () => {
         /* ========================================================
          * USER / STUDENT LAYOUT (Horizontal Navbar + Mobile BottomNav)
          * ======================================================== */
-        <div className="flex flex-col flex-1 min-h-screen pb-20 md:pb-0">
+        <div className="flex flex-col flex-1 min-w-0 min-h-screen pb-20 md:pb-0">
           {/* Desktop & Tablet Top Navbar */}
           <header className="h-18 px-4 sm:px-8 sticky top-0 z-30 bg-white/85 dark:bg-slate-900/85 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
             <div className="flex items-center gap-8">
@@ -375,7 +376,7 @@ export const AppShell = () => {
           </header>
 
           {/* User Main Content Area */}
-          <main className="flex-1 max-w-[1280px] w-full mx-auto p-4 sm:p-6 lg:p-8">
+          <main className="flex-1 min-w-0 max-w-[1280px] w-full mx-auto p-4 sm:p-6 lg:p-8">
             <Outlet />
           </main>
 
