@@ -87,10 +87,10 @@ export const DashboardPage = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50">
-            Selamat Datang, {user?.namaLengkap} 👋
+            Welcome Back, {user.namaLengkap}
           </h2>
-          <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-            Ringkasan operasional dan persediaan barang SIMASET secara real-time.
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+            Ringkasan status operasional dan inventaris
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -179,8 +179,63 @@ export const DashboardPage = () => {
             <p className="text-xs mt-1">Saat ini tidak ada pengajuan pending atau aset yang sedang dipinjam.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+          <>
+            {/* Mobile Cards View */}
+            <div className="md:hidden flex flex-col divide-y divide-slate-100 dark:divide-slate-800/60">
+              {borrowings.map((b) => (
+                <div key={b.id} className="flex flex-col gap-4 p-4 hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0 font-bold text-slate-600 dark:text-slate-300">
+                        {b.user?.namaLengkap ? b.user.namaLengkap.charAt(0).toUpperCase() : 'U'}
+                      </div>
+                      <div>
+                        <p className="font-bold text-slate-900 dark:text-slate-100">{b.user?.namaLengkap || `User ID ${b.userId}`}</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 font-mono mt-0.5">NIM: {b.user?.nim || '-'}</p>
+                      </div>
+                    </div>
+                    <div className="shrink-0">
+                      <StatusBadge status={b.statusPeminjaman} type="borrowing" />
+                    </div>
+                  </div>
+
+                  <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-3 text-xs border border-slate-100 dark:border-slate-800/60">
+                    <div className="mb-2.5">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Aset Dipinjam</p>
+                      <p className="font-bold text-slate-800 dark:text-slate-200 text-sm">{b.asset?.namaAset || `Asset ID ${b.assetId}`}</p>
+                      <p className="font-mono text-xs text-slate-500 dark:text-slate-400 mt-0.5">{b.asset?.kodeAset || '-'}</p>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-200 dark:border-slate-700/60">
+                      <div>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Tgl Pinjam</p>
+                        <p className="font-semibold text-slate-700 dark:text-slate-300">{formatDate(b.tanggalPinjam)}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Tenggat Waktu</p>
+                        <p className="font-bold text-rose-600 dark:text-rose-400">{formatDate(b.tenggatWaktu)}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-1">
+                    {b.statusPeminjaman === 'PENDING' ? (
+                      <Button variant="primary" className="w-full" isLoading={approvingId === b.id} onClick={(e) => handleApprove(b.id, e)}>
+                        Approve
+                      </Button>
+                    ) : (
+                      <Button variant="secondary" className="w-full" onClick={() => navigate(`/borrowings?status=AKTIF`)}>
+                        Kelola Return
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop Table View */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-50 dark:bg-slate-900/60 border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">
                   <th className="py-3.5 px-6">Peminjam</th>
@@ -246,7 +301,8 @@ export const DashboardPage = () => {
                 ))}
               </tbody>
             </table>
-          </div>
+            </div>
+          </>
         )}
       </div>
     </div>
