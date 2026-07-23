@@ -3,7 +3,7 @@ import prisma from "../config/prisma.js";
 //create data
 export const requestBorrowing = async (req, res) =>{
   try {
-    const { assetId, tenggatWaktu, catatan } = req.body;
+    const { assetId, tenggatWaktu, catatan, lokasiPenggunaanId } = req.body;
     const userId = req.user.id;
 
     //check sattus
@@ -32,6 +32,7 @@ export const requestBorrowing = async (req, res) =>{
       data: {
         userId: userId,
         assetId: parseInt(assetId),
+        lokasiPenggunaanId: lokasiPenggunaanId ? parseInt(lokasiPenggunaanId) : null,
         tanggalPinjam: new Date(),
         tenggatWaktu: new Date(tenggatWaktu),
         statusPeminjaman: 'PENDING',
@@ -96,10 +97,25 @@ export const approveBorrowing = async (req, res) => {
         where: { id: parseInt(id) },
         data: { statusPeminjaman: 'AKTIF' }
       }),
-      //change asset status 'dipinjam"
+      //change asset status 'dipinjam" and move physical location if requested
       prisma.asset.update({
         where: { id: borrowing.assetId },
-        data: { statusKetersediaan: 'DIPINJAM' }
+        data: {
+          statusKetersediaan: 'DIPINJAM',
+          ...(borrowing.lokasiPenggunaanId ? { locationId: borrowing.lokasiPenggunaanId } : {})
+        }
+      }),
+      // Auto-reject all other pending requests for this exact asset
+      prisma.borrowing.updateMany({
+        where: {
+          assetId: borrowing.assetId,
+          statusPeminjaman: 'PENDING',
+          id: { not: parseInt(id) }
+        },
+        data: {
+          statusPeminjaman: 'DITOLAK',
+          catatan: 'Ditolak otomatis oleh sistem: Unit aset ini telah disetujui untuk peminjam lain terlebih dahulu (First-Come, First-Approved).'
+        }
       })
     ]);
 
@@ -112,6 +128,44 @@ export const approveBorrowing = async (req, res) => {
     res.status(500).json({
       status: 'error',
       message: 'Gagal menyetujui peminjaman'
+    });
+  }
+};
+
+// reject borrowing manually by admin/staff
+export const rejectBorrowing = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { catatan, alasan } = req.body;
+
+    const borrowing = await prisma.borrowing.findUnique({
+      where: { id: parseInt(id) }
+    });
+
+    if (!borrowing || borrowing.statusPeminjaman !== 'PENDING') {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Data peminjaman tidak valid atau sudah diproses'
+      });
+    }
+
+    const updatedBorrowing = await prisma.borrowing.update({
+      where: { id: parseInt(id) },
+      data: {
+        statusPeminjaman: 'DITOLAK',
+        catatan: catatan || alasan || 'Ditolak oleh admin/staff'
+      }
+    });
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Permintaan pinjaman berhasil ditolak',
+      data: updatedBorrowing
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      message: 'Gagal menolak peminjaman'
     });
   }
 };
@@ -132,8 +186,13 @@ export const returnAsset = async (req, res) => {
       });
     }
 
+    // Find Gudang Sarpras or fallback location to return asset home
+    const gudangSarpras = await prisma.location.findFirst({
+      where: { namaLokasi: { contains: 'Gudang Sarpras' } }
+    });
+
     //update status
-    const [finishedBorrowing, returnAsset] = await prisma.$transaction([
+    const [finishedBorrowing, returnedAsset] = await prisma.$transaction([
       prisma.borrowing.update({
         where: { id: parseInt(id) },
         data: { 
@@ -147,7 +206,8 @@ export const returnAsset = async (req, res) => {
         where: { id: borrowing.assetId },
         data: {
           statusKetersediaan: 'TERSEDIA',
-          kondisi: kondisiKembali || 'BAIK'
+          kondisi: kondisiKembali || 'BAIK',
+          ...(gudangSarpras ? { locationId: gudangSarpras.id } : {})
         }
       })
     ]);
@@ -155,7 +215,7 @@ export const returnAsset = async (req, res) => {
     res.status(200).json({
       status: 'success',
       message: 'Peminjaman berhasil diselesaikan',
-      data: { finishedBorrowing, returnAsset }
+      data: { finishedBorrowing, returnedAsset }
     });
   } catch (error) {
     res.status(500).json({
@@ -174,7 +234,8 @@ export const getBorrowings = async (req, res) => {
       where: filter,
       include: {
         user: { select: { namaLengkap: true, nim: true } },
-        asset: { select: { namaAset: true, kodeAset: true } }
+        asset: { select: { namaAset: true, kodeAset: true, locationId: true } },
+        lokasiPenggunaan: { select: { id: true, namaLokasi: true } }
       },
       orderBy: { createdAt: 'desc' }
     });
