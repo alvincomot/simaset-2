@@ -46,6 +46,9 @@ model user {
   createdAt        DateTime             @default(now())
   resetToken       String?              @db.VarChar(255)
   resetTokenExpiry DateTime?
+  isVerified       Boolean              @default(true)
+  verificationToken String?             @db.VarChar(255)
+  verificationTokenExpiry DateTime?
   
   // Relasi
   borrowings         borrowing[]
@@ -73,6 +76,7 @@ model location {
   allocatedAssets        asset[]              @relation("AssetAllocatedLocation")
   historyAsalLocations   allocation_history[] @relation("HistoryLokasiAsal")
   historyTujuanLocations allocation_history[] @relation("HistoryLokasiTujuan")
+  borrowings             borrowing[]          @relation("BorrowingLocation")
 }
 
 model asset {
@@ -95,20 +99,22 @@ model asset {
 }
 
 model borrowing {
-  id               Int         @id @default(autoincrement())
-  userId           Int
-  assetId          Int
-  tanggalPinjam    DateTime
-  tenggatWaktu     DateTime
-  tanggalKembali   DateTime?
-  statusPeminjaman String      @default("Menunggu")
-  kondisiKembali   KondisiAset?
-  catatan          String?     @db.Text
-  createdAt        DateTime    @default(now())
+  id                 Int         @id @default(autoincrement())
+  userId             Int
+  assetId            Int
+  lokasiPenggunaanId Int?
+  tanggalPinjam      DateTime
+  tenggatWaktu       DateTime
+  tanggalKembali     DateTime?
+  statusPeminjaman   String      @default("PENDING")
+  kondisiKembali     KondisiAset?
+  catatan            String?     @db.Text
+  createdAt          DateTime    @default(now())
 
   // Definisi Foreign Key
-  user             user        @relation(fields: [userId], references: [id])
-  asset            asset       @relation(fields: [assetId], references: [id])
+  user               user        @relation(fields: [userId], references: [id])
+  asset              asset       @relation(fields: [assetId], references: [id])
+  lokasiPenggunaan   location?   @relation("BorrowingLocation", fields: [lokasiPenggunaanId], references: [id], onDelete: SetNull)
 }
 
 model allocation_history {
