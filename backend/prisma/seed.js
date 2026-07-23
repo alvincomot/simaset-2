@@ -46,7 +46,8 @@ async function main() {
 
   //seed master data
   const categoriesData = [
-    { namaKategori: 'Elektronik', deskripsi: 'Laptop, Proyektor, PC' }
+    { namaKategori: 'Elektronik', deskripsi: 'Laptop, Proyektor, PC' },
+    { namaKategori: 'Aksesoris', deskripsi: 'Kabel Converter, Adapter, Pointer' }
   ];
   for (const cat of categoriesData) {
     const existing = await prisma.category.findFirst({ where: { namaKategori: cat.namaKategori } });
@@ -56,12 +57,55 @@ async function main() {
   }
 
   const locationsData = [
-    { namaLokasi: 'Ruang Servis', deskripsi: 'Pusat pemeliharaan dan perbaikan aset' }
+    { namaLokasi: 'Ruang Servis', deskripsi: 'Pusat pemeliharaan dan perbaikan aset' },
+    { namaLokasi: 'Gudang Sarpras', deskripsi: 'Gudang utama penyimpanan aset operasional peminjaman umum kampus' },
+    { namaLokasi: 'Lab Komputer 1', deskripsi: 'Ruang laboratorium perkuliahan dan praktikum komputer' },
+    { namaLokasi: 'Ruang Dosen', deskripsi: 'Ruang transit dan kerja dosen FTI' }
   ];
   for (const loc of locationsData) {
     const existing = await prisma.location.findFirst({ where: { namaLokasi: loc.namaLokasi } });
     if (!existing) {
       await prisma.location.create({ data: loc });
+    }
+  }
+
+  // Seed sample assets into Gudang Sarpras
+  const gudangSarpras = await prisma.location.findFirst({ where: { namaLokasi: 'Gudang Sarpras' } });
+  const catAksesoris = await prisma.category.findFirst({ where: { namaKategori: 'Aksesoris' } });
+  const catElektronik = await prisma.category.findFirst({ where: { namaKategori: 'Elektronik' } });
+
+  if (gudangSarpras && catAksesoris && catElektronik) {
+    const sampleAssets = [
+      {
+        kodeAset: 'FTI-AST-1784424502',
+        namaAset: 'Kabel Converter HDMI to VGA',
+        categoryId: catAksesoris.id,
+        locationId: gudangSarpras.id,
+        kondisi: 'BAIK',
+        statusKetersediaan: 'TERSEDIA'
+      },
+      {
+        kodeAset: 'FTI-AST-PRJ-001',
+        namaAset: 'Proyektor Portable Epson',
+        categoryId: catElektronik.id,
+        locationId: gudangSarpras.id,
+        kondisi: 'BAIK',
+        statusKetersediaan: 'TERSEDIA'
+      }
+    ];
+
+    for (const ast of sampleAssets) {
+      await prisma.asset.upsert({
+        where: { kodeAset: ast.kodeAset },
+        update: {
+          namaAset: ast.namaAset,
+          categoryId: ast.categoryId,
+          locationId: ast.locationId,
+          kondisi: ast.kondisi,
+          statusKetersediaan: ast.statusKetersediaan
+        },
+        create: ast
+      });
     }
   }
 
